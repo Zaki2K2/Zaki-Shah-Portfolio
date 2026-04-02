@@ -502,7 +502,7 @@ document.addEventListener("mouseleave", () => {
 // Ring grows on interactive elements
 document
   .querySelectorAll(
-    "a, button, .card, .service-card, .stat-box, .profile-card, .contact-panel, .hero-panel, .skills-panel, .signature-panel, .signature-principle, .now-panel, .now-card, .credibility-item, .contact-availability__item",
+    "a, button, .card, .service-card, .stat-box, .profile-card, .contact-panel, .skills-panel, .signature-panel, .signature-principle, .now-panel, .now-card, .credibility-item, .contact-availability__item",
   )
   .forEach((el) => {
     el.addEventListener("mouseenter", () => ring.classList.add("hovered"));
@@ -513,8 +513,8 @@ document
 const phrases = [
   "Frontend Developer",
   "Angular Developer",
-  "UI-Focused Web Developer",
-  "Clean Code & Responsive Interfaces",
+  "Frontend-First, Backend-Aware",
+  "Building Connected Web Interfaces",
 ];
 let pIdx = 0,
   cIdx = 0,
@@ -611,7 +611,6 @@ window.addEventListener(
 
 // ── Parallax hero — desktop only ─────────────────────────────
 const heroContent = document.querySelector(".hero-content");
-const heroPanel = document.querySelector(".hero-panel");
 const isTouch = window.matchMedia(
   "(hover: none) and (pointer: coarse)",
 ).matches;
@@ -725,28 +724,6 @@ if (narrativeSections.length) {
   );
 
   narrativeSections.forEach((section) => sceneObserver.observe(section));
-}
-
-if (heroPanel && !isTouch) {
-  heroPanel.addEventListener("mousemove", (e) => {
-    const rect = heroPanel.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    const rx = ((e.clientY - rect.top) / rect.height - 0.5) * -4;
-    const ry = ((e.clientX - rect.left) / rect.width - 0.5) * 6;
-
-    heroPanel.style.setProperty("--panel-x", `${x}%`);
-    heroPanel.style.setProperty("--panel-y", `${y}%`);
-    heroPanel.style.setProperty("--panel-rx", `${rx}deg`);
-    heroPanel.style.setProperty("--panel-ry", `${ry}deg`);
-  });
-
-  heroPanel.addEventListener("mouseleave", () => {
-    heroPanel.style.setProperty("--panel-x", "80%");
-    heroPanel.style.setProperty("--panel-y", "18%");
-    heroPanel.style.setProperty("--panel-rx", "0deg");
-    heroPanel.style.setProperty("--panel-ry", "0deg");
-  });
 }
 
 if (!isTouch) {
