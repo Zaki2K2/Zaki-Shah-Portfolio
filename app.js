@@ -13,12 +13,435 @@ window.addEventListener("pageshow", () => {
   window.scrollTo(0, 0);
 });
 
+const preloader = document.getElementById("preloader");
+const preloaderCanvas = document.getElementById("preloaderCanvas");
+const preloaderCore = document.getElementById("preloaderCore");
+const preloaderPhase = document.getElementById("preloaderPhase");
+const preloaderSkip = document.getElementById("preloaderSkip");
+const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+let preloaderWindowLoaded = false;
+let preloaderFinishTimer = 0;
+let preloaderSafetyTimer = 0;
+let preloaderRaf = 0;
+let preloaderEnded = false;
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function lerp(start, end, progress) {
+  return start + (end - start) * progress;
+}
+
+function easeOutCubic(value) {
+  return 1 - (1 - value) ** 3;
+}
+
+function easeInOutCubic(value) {
+  return value < 0.5
+    ? 4 * value * value * value
+    : 1 - ((-2 * value + 2) ** 3) / 2;
+}
+
+function easeOutExpo(value) {
+  return value === 1 ? 1 : 1 - 2 ** (-10 * value);
+}
+
+function createPreloaderConfig() {
+  const reduced = reducedMotionQuery.matches;
+  const compact = window.innerWidth < 768;
+
+  return {
+    duration: reduced ? 1450 : 4300,
+    darkEnd: reduced ? 220 : 800,
+    singularityEnd: reduced ? 620 : 1600,
+    burstEnd: reduced ? 980 : 2800,
+    settleEnd: reduced ? 1220 : 3800,
+    safetyEnd: reduced ? 2200 : 5600,
+    starCount: reduced ? 24 : compact ? 42 : 70,
+    particleCount: reduced ? 18 : compact ? 56 : 92,
+    ringOffsets: reduced ? [0, 180] : [0, 150, 310],
+  };
+}
+
+function initCosmicPreloader() {
+  if (!preloader || !preloaderCanvas || !preloaderCore || !preloaderPhase) {
+    document.body.classList.remove("preloading");
+    return;
+  }
+
+  const ctx = preloaderCanvas.getContext("2d");
+
+  if (!ctx) {
+    document.body.classList.remove("preloading");
+    return;
+  }
+
+  let config = createPreloaderConfig();
+  let width = 0;
+  let height = 0;
+  let centerX = 0;
+  let centerY = 0;
+  let startTime = performance.now();
+  let currentPhase = "";
+
+  const stars = Array.from({ length: config.starCount }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    size: Math.random() * 1.6 + 0.35,
+    alpha: Math.random() * 0.45 + 0.12,
+    twinkle: Math.random() * 1.3 + 0.3,
+    drift: (Math.random() - 0.5) * 0.0025,
+  }));
+
+  const particles = Array.from({ length: config.particleCount }, () => {
+    const angle = Math.random() * Math.PI * 2;
+
+    return {
+      angle,
+      spread: Math.random() * 0.85 + 0.35,
+      delay: Math.random() * (reducedMotionQuery.matches ? 90 : 260),
+      size: Math.random() * 2.2 + 0.9,
+      alpha: Math.random() * 0.4 + 0.28,
+      tint: Math.random() > 0.55 ? "cyan" : "violet",
+    };
+  });
+
+  function resizePreloader() {
+    config = createPreloaderConfig();
+    const dpr = Math.min(
+      window.devicePixelRatio || 1,
+      reducedMotionQuery.matches ? 1.2 : 1.6,
+    );
+
+    width = window.innerWidth;
+    height = window.innerHeight;
+    centerX = width / 2;
+    centerY = height / 2;
+    preloaderCanvas.width = Math.floor(width * dpr);
+    preloaderCanvas.height = Math.floor(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function setPhaseLabel(elapsed) {
+    let nextPhase = "World Revealing";
+
+    if (elapsed < config.darkEnd) {
+      nextPhase = "Primordial Darkness";
+    } else if (elapsed < config.singularityEnd) {
+      nextPhase = "Singularity Forming";
+    } else if (elapsed < config.burstEnd) {
+      nextPhase = "Radiant Expansion";
+    } else if (elapsed < config.settleEnd) {
+      nextPhase = "Cosmic Settling";
+    }
+
+    if (nextPhase !== currentPhase) {
+      currentPhase = nextPhase;
+      preloaderPhase.textContent = nextPhase;
+    }
+  }
+
+  function finishPreloader(skipped = false) {
+    if (preloaderEnded) return;
+
+    preloaderEnded = true;
+    clearTimeout(preloaderFinishTimer);
+    clearTimeout(preloaderSafetyTimer);
+    cancelAnimationFrame(preloaderRaf);
+    window.removeEventListener("resize", resizePreloader);
+    window.removeEventListener("keydown", onPreloaderKeydown);
+    preloaderSkip?.removeEventListener("click", onPreloaderSkip);
+
+    document.body.classList.remove("preloading");
+    preloader.classList.add("is-hiding");
+    if (skipped) {
+      preloader.classList.add("is-skipping");
+    }
+
+    window.setTimeout(() => {
+      preloader.classList.add("is-hidden");
+      preloader.remove();
+    }, skipped ? 440 : 820);
+  }
+
+  function requestPreloaderFinish() {
+    if (preloaderEnded || !preloaderWindowLoaded) return;
+
+    const elapsed = performance.now() - startTime;
+
+    if (elapsed >= config.duration) {
+      finishPreloader(false);
+      return;
+    }
+
+    clearTimeout(preloaderFinishTimer);
+    preloaderFinishTimer = window.setTimeout(
+      () => finishPreloader(false),
+      config.duration - elapsed,
+    );
+  }
+
+  function onPreloaderSkip() {
+    finishPreloader(true);
+  }
+
+  function onPreloaderKeydown(event) {
+    if (event.key === "Escape") {
+      finishPreloader(true);
+    }
+  }
+
+  function drawBackdrop(elapsed, burstProgress, settleProgress) {
+    const minDim = Math.min(width, height);
+    const haloRadius = lerp(minDim * 0.1, minDim * 0.42, burstProgress);
+    const haloAlpha = 0.08 + burstProgress * 0.22 - settleProgress * 0.08;
+    const bloom = ctx.createRadialGradient(
+      centerX,
+      centerY,
+      0,
+      centerX,
+      centerY,
+      haloRadius,
+    );
+
+    bloom.addColorStop(0, `rgba(165, 240, 255, ${0.28 + burstProgress * 0.12})`);
+    bloom.addColorStop(0.18, `rgba(82, 135, 255, ${haloAlpha})`);
+    bloom.addColorStop(0.42, `rgba(123, 47, 255, ${0.12 + burstProgress * 0.12})`);
+    bloom.addColorStop(1, "rgba(4, 6, 16, 0)");
+
+    ctx.fillStyle = bloom;
+    ctx.fillRect(0, 0, width, height);
+
+    const dust = ctx.createRadialGradient(
+      centerX,
+      centerY,
+      minDim * 0.04,
+      centerX,
+      centerY,
+      minDim * 0.62,
+    );
+    dust.addColorStop(0, `rgba(255, 255, 255, ${0.02 + burstProgress * 0.05})`);
+    dust.addColorStop(0.28, `rgba(0, 212, 255, ${0.035 + burstProgress * 0.05})`);
+    dust.addColorStop(0.62, `rgba(123, 47, 255, ${0.03 + settleProgress * 0.04})`);
+    dust.addColorStop(1, "rgba(123, 47, 255, 0)");
+    ctx.fillStyle = dust;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.globalCompositeOperation = "lighter";
+    stars.forEach((star, index) => {
+      const twinkle = 0.4 + Math.sin(elapsed * 0.001 * star.twinkle + index) * 0.5;
+      const alpha =
+        star.alpha *
+        (0.4 + burstProgress * 0.9 + settleProgress * 0.4) *
+        twinkle;
+      const x = (star.x + elapsed * star.drift * 0.01) * width;
+      const y = star.y * height;
+
+      ctx.fillStyle =
+        star.size > 1.3
+          ? `rgba(174, 235, 255, ${alpha})`
+          : `rgba(215, 220, 255, ${alpha * 0.85})`;
+      ctx.beginPath();
+      ctx.arc(x, y, star.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  function drawBurst(elapsed, burstProgress, settleProgress, revealProgress) {
+    if (elapsed < config.singularityEnd - 120) return;
+
+    const minDim = Math.min(width, height);
+
+    config.ringOffsets.forEach((offset, index) => {
+      const ringProgress = clamp(
+        (elapsed - (config.singularityEnd + offset)) /
+          (reducedMotionQuery.matches ? 720 : 1100),
+        0,
+        1,
+      );
+
+      if (ringProgress <= 0 || ringProgress >= 1) return;
+
+      const radius = lerp(
+        minDim * 0.02,
+        minDim * (0.16 + index * 0.08),
+        easeOutExpo(ringProgress),
+      );
+      const alpha =
+        (1 - ringProgress) *
+        (0.32 - index * 0.06) *
+        (1 - revealProgress * 0.75);
+
+      ctx.strokeStyle =
+        index % 2 === 0
+          ? `rgba(120, 228, 255, ${alpha})`
+          : `rgba(167, 131, 255, ${alpha})`;
+      ctx.lineWidth = 1.1 + (1 - ringProgress) * 2.2;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+
+    ctx.globalCompositeOperation = "lighter";
+    particles.forEach((particle, index) => {
+      const particleProgress = clamp(
+        (elapsed - config.singularityEnd - particle.delay) /
+          (reducedMotionQuery.matches ? 720 : 1450),
+        0,
+        1,
+      );
+
+      if (particleProgress <= 0 || particleProgress >= 1) return;
+
+      const travel =
+        minDim *
+        (0.06 + particle.spread * 0.3) *
+        easeOutCubic(particleProgress);
+      const x =
+        centerX +
+        Math.cos(particle.angle) * travel +
+        Math.sin(elapsed * 0.0012 + index) * 4;
+      const y =
+        centerY +
+        Math.sin(particle.angle) * travel +
+        Math.cos(elapsed * 0.0014 + index) * 4;
+      const alpha =
+        particle.alpha *
+        (1 - particleProgress) ** 1.35 *
+        (1 - revealProgress * 0.82);
+      const size =
+        particle.size *
+        (1 + burstProgress * 0.45) *
+        (1 - particleProgress * 0.38);
+
+      ctx.fillStyle =
+        particle.tint === "cyan"
+          ? `rgba(132, 238, 255, ${alpha})`
+          : `rgba(186, 142, 255, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalCompositeOperation = "source-over";
+
+    const waveAlpha =
+      (0.06 + burstProgress * 0.24 - settleProgress * 0.1) *
+      (1 - revealProgress);
+    const wave = ctx.createRadialGradient(
+      centerX,
+      centerY,
+      minDim * 0.01,
+      centerX,
+      centerY,
+      minDim * 0.24,
+    );
+    wave.addColorStop(0, `rgba(255, 255, 255, ${0.08 + burstProgress * 0.1})`);
+    wave.addColorStop(0.18, `rgba(0, 212, 255, ${waveAlpha})`);
+    wave.addColorStop(0.42, `rgba(123, 47, 255, ${waveAlpha * 0.7})`);
+    wave.addColorStop(1, "rgba(123, 47, 255, 0)");
+    ctx.fillStyle = wave;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  function renderPreloader(now) {
+    const elapsed = now - startTime;
+    const singularityProgress = clamp(
+      (elapsed - config.darkEnd) / (config.singularityEnd - config.darkEnd),
+      0,
+      1,
+    );
+    const burstProgress = clamp(
+      (elapsed - config.singularityEnd) /
+        (config.burstEnd - config.singularityEnd),
+      0,
+      1,
+    );
+    const settleProgress = clamp(
+      (elapsed - config.burstEnd) / (config.settleEnd - config.burstEnd),
+      0,
+      1,
+    );
+    const revealProgress = clamp(
+      (elapsed - config.settleEnd) / (config.duration - config.settleEnd),
+      0,
+      1,
+    );
+    const corePulse =
+      singularityProgress > 0
+        ? 1 + Math.sin(elapsed * 0.018) * (burstProgress > 0 ? 0.18 : 0.08)
+        : 0.9;
+    const coreScale =
+      0.06 +
+      easeInOutCubic(singularityProgress) * 0.48 +
+      burstProgress * 1.16 -
+      settleProgress * 0.34;
+    const ringScale =
+      0.24 +
+      singularityProgress * 0.55 +
+      burstProgress * 2.7 -
+      revealProgress * 1.35;
+    const ringOpacity =
+      0.03 +
+      singularityProgress * 0.18 +
+      burstProgress * 0.28 -
+      revealProgress * 0.24;
+    const coreOpacity =
+      0.04 +
+      singularityProgress * 0.62 +
+      burstProgress * 0.32 -
+      revealProgress * 0.56;
+
+    setPhaseLabel(elapsed);
+
+    ctx.clearRect(0, 0, width, height);
+    drawBackdrop(elapsed, burstProgress, settleProgress);
+    drawBurst(elapsed, burstProgress, settleProgress, revealProgress);
+
+    preloader.style.setProperty(
+      "--core-scale",
+      (coreScale * corePulse).toFixed(3),
+    );
+    preloader.style.setProperty(
+      "--core-opacity",
+      clamp(coreOpacity, 0.03, 1).toFixed(3),
+    );
+    preloader.style.setProperty(
+      "--ring-scale",
+      clamp(ringScale, 0.22, 3.1).toFixed(3),
+    );
+    preloader.style.setProperty(
+      "--ring-opacity",
+      clamp(ringOpacity, 0.02, 0.42).toFixed(3),
+    );
+
+    if (!preloaderEnded) {
+      preloaderRaf = requestAnimationFrame(renderPreloader);
+    }
+  }
+
+  resizePreloader();
+  window.addEventListener("resize", resizePreloader, { passive: true });
+  window.addEventListener("keydown", onPreloaderKeydown);
+  preloaderSkip?.addEventListener("click", onPreloaderSkip);
+  preloaderSafetyTimer = window.setTimeout(
+    () => finishPreloader(false),
+    config.safetyEnd,
+  );
+  preloaderRaf = requestAnimationFrame(renderPreloader);
+
+  window.signalPreloaderReady = requestPreloaderFinish;
+}
+
+initCosmicPreloader();
+
 window.addEventListener("load", () => {
   window.scrollTo(0, 0);
-  setTimeout(
-    () => document.getElementById("preloader").classList.add("hidden"),
-    2000,
-  );
+  preloaderWindowLoaded = true;
+  if (typeof window.signalPreloaderReady === "function") {
+    window.signalPreloaderReady();
+  }
 });
 
 // ── Hamburger menu ────────────────────────────────────────────

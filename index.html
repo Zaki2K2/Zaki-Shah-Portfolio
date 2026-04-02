@@ -6,11 +6,35 @@
     <title>Syed Zaki Ahmad</title>
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body>
+  <body class="preloading">
     <!-- Preloader -->
     <div class="preloader" id="preloader">
-      <div class="preloader-logo">SZ</div>
-      <div class="preloader-bar"><div class="preloader-fill"></div></div>
+      <canvas
+        class="preloader__canvas"
+        id="preloaderCanvas"
+        aria-hidden="true"
+      ></canvas>
+      <div class="preloader__vignette" aria-hidden="true"></div>
+      <div class="preloader__edge-glow" aria-hidden="true"></div>
+      <div class="preloader__core" id="preloaderCore" aria-hidden="true">
+        <span class="preloader__core-ring preloader__core-ring--outer"></span>
+        <span class="preloader__core-ring preloader__core-ring--mid"></span>
+        <span class="preloader__core-ring preloader__core-ring--inner"></span>
+        <span class="preloader__core-point"></span>
+      </div>
+      <div class="preloader__hud">
+        <p class="preloader__eyebrow">Universe Initializing</p>
+        <div class="preloader__signature">Syed Zaki Ahmad</div>
+        <p class="preloader__phase" id="preloaderPhase">Primordial Darkness</p>
+      </div>
+      <button
+        type="button"
+        class="preloader__skip"
+        id="preloaderSkip"
+        aria-label="Skip intro animation"
+      >
+        Skip Intro
+      </button>
     </div>
 
     <!-- Custom cursor -->
