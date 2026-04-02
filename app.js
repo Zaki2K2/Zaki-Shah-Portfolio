@@ -17,6 +17,7 @@ const preloader = document.getElementById("preloader");
 const preloaderCanvas = document.getElementById("preloaderCanvas");
 const preloaderCore = document.getElementById("preloaderCore");
 const preloaderPhase = document.getElementById("preloaderPhase");
+const preloaderProgress = document.getElementById("preloaderProgress");
 const preloaderSkip = document.getElementById("preloaderSkip");
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let preloaderWindowLoaded = false;
@@ -52,15 +53,23 @@ function createPreloaderConfig() {
   const compact = window.innerWidth < 768;
 
   return {
-    duration: reduced ? 1450 : 4300,
-    darkEnd: reduced ? 220 : 800,
-    singularityEnd: reduced ? 620 : 1600,
-    burstEnd: reduced ? 980 : 2800,
-    settleEnd: reduced ? 1220 : 3800,
-    safetyEnd: reduced ? 2200 : 5600,
-    starCount: reduced ? 24 : compact ? 42 : 70,
-    particleCount: reduced ? 18 : compact ? 56 : 92,
-    ringOffsets: reduced ? [0, 180] : [0, 150, 310],
+    compact,
+    duration: reduced ? 1450 : compact ? 3650 : 4300,
+    darkEnd: reduced ? 220 : compact ? 620 : 800,
+    singularityEnd: reduced ? 620 : compact ? 1360 : 1600,
+    burstEnd: reduced ? 980 : compact ? 2260 : 2800,
+    settleEnd: reduced ? 1220 : compact ? 3020 : 3800,
+    safetyEnd: reduced ? 2200 : compact ? 4700 : 5600,
+    starCount: reduced ? 20 : compact ? 30 : 70,
+    particleCount: reduced ? 14 : compact ? 28 : 92,
+    ringOffsets: reduced ? [0, 180] : compact ? [0, 170, 340] : [0, 150, 310],
+    centerYFactor: reduced ? 0.46 : compact ? 0.41 : 0.48,
+    haloScale: reduced ? 0.3 : compact ? 0.34 : 0.42,
+    waveScale: reduced ? 0.18 : compact ? 0.19 : 0.24,
+    textSafeTop: reduced ? 0.56 : compact ? 0.5 : 0.62,
+    textSafeAlpha: reduced ? 0.84 : compact ? 0.92 : 0.58,
+    burstJitter: reduced ? 1.5 : compact ? 2.2 : 4,
+    particleTravel: reduced ? 0.2 : compact ? 0.22 : 0.3,
   };
 }
 
@@ -82,30 +91,36 @@ function initCosmicPreloader() {
   let height = 0;
   let centerX = 0;
   let centerY = 0;
+  let textSafeTopPx = 0;
   let startTime = performance.now();
   let currentPhase = "";
 
-  const stars = Array.from({ length: config.starCount }, () => ({
-    x: Math.random(),
-    y: Math.random(),
-    size: Math.random() * 1.6 + 0.35,
-    alpha: Math.random() * 0.45 + 0.12,
-    twinkle: Math.random() * 1.3 + 0.3,
-    drift: (Math.random() - 0.5) * 0.0025,
-  }));
+  let stars = [];
+  let particles = [];
 
-  const particles = Array.from({ length: config.particleCount }, () => {
-    const angle = Math.random() * Math.PI * 2;
+  function rebuildPreloaderElements() {
+    stars = Array.from({ length: config.starCount }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      size: Math.random() * 1.6 + 0.35,
+      alpha: Math.random() * 0.45 + 0.12,
+      twinkle: Math.random() * 1.3 + 0.3,
+      drift: (Math.random() - 0.5) * 0.0025,
+    }));
 
-    return {
-      angle,
-      spread: Math.random() * 0.85 + 0.35,
-      delay: Math.random() * (reducedMotionQuery.matches ? 90 : 260),
-      size: Math.random() * 2.2 + 0.9,
-      alpha: Math.random() * 0.4 + 0.28,
-      tint: Math.random() > 0.55 ? "cyan" : "violet",
-    };
-  });
+    particles = Array.from({ length: config.particleCount }, () => {
+      const angle = Math.random() * Math.PI * 2;
+
+      return {
+        angle,
+        spread: Math.random() * 0.85 + 0.35,
+        delay: Math.random() * (reducedMotionQuery.matches ? 90 : 260),
+        size: Math.random() * 2.2 + 0.9,
+        alpha: Math.random() * 0.4 + 0.28,
+        tint: Math.random() > 0.55 ? "cyan" : "violet",
+      };
+    });
+  }
 
   function resizePreloader() {
     config = createPreloaderConfig();
@@ -117,10 +132,14 @@ function initCosmicPreloader() {
     width = window.innerWidth;
     height = window.innerHeight;
     centerX = width / 2;
-    centerY = height / 2;
+    centerY = height * config.centerYFactor;
+    textSafeTopPx = height * config.textSafeTop;
     preloaderCanvas.width = Math.floor(width * dpr);
     preloaderCanvas.height = Math.floor(height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    preloader.style.setProperty("--core-x", "50%");
+    preloader.style.setProperty("--core-y", `${config.centerYFactor * 100}%`);
+    rebuildPreloaderElements();
   }
 
   function setPhaseLabel(elapsed) {
@@ -139,6 +158,11 @@ function initCosmicPreloader() {
     if (nextPhase !== currentPhase) {
       currentPhase = nextPhase;
       preloaderPhase.textContent = nextPhase;
+    }
+
+    if (preloaderProgress) {
+      const progress = clamp((elapsed / config.duration) * 100, 0, 100);
+      preloaderProgress.textContent = `${String(Math.round(progress)).padStart(2, "0")}%`;
     }
   }
 
@@ -194,8 +218,8 @@ function initCosmicPreloader() {
 
   function drawBackdrop(elapsed, burstProgress, settleProgress) {
     const minDim = Math.min(width, height);
-    const haloRadius = lerp(minDim * 0.1, minDim * 0.42, burstProgress);
-    const haloAlpha = 0.08 + burstProgress * 0.22 - settleProgress * 0.08;
+    const haloRadius = lerp(minDim * 0.09, minDim * config.haloScale, burstProgress);
+    const haloAlpha = 0.06 + burstProgress * 0.16 - settleProgress * 0.06;
     const bloom = ctx.createRadialGradient(
       centerX,
       centerY,
@@ -205,9 +229,9 @@ function initCosmicPreloader() {
       haloRadius,
     );
 
-    bloom.addColorStop(0, `rgba(165, 240, 255, ${0.28 + burstProgress * 0.12})`);
+    bloom.addColorStop(0, `rgba(165, 240, 255, ${0.2 + burstProgress * 0.08})`);
     bloom.addColorStop(0.18, `rgba(82, 135, 255, ${haloAlpha})`);
-    bloom.addColorStop(0.42, `rgba(123, 47, 255, ${0.12 + burstProgress * 0.12})`);
+    bloom.addColorStop(0.42, `rgba(123, 47, 255, ${0.08 + burstProgress * 0.08})`);
     bloom.addColorStop(1, "rgba(4, 6, 16, 0)");
 
     ctx.fillStyle = bloom;
@@ -221,11 +245,19 @@ function initCosmicPreloader() {
       centerY,
       minDim * 0.62,
     );
-    dust.addColorStop(0, `rgba(255, 255, 255, ${0.02 + burstProgress * 0.05})`);
-    dust.addColorStop(0.28, `rgba(0, 212, 255, ${0.035 + burstProgress * 0.05})`);
-    dust.addColorStop(0.62, `rgba(123, 47, 255, ${0.03 + settleProgress * 0.04})`);
+    dust.addColorStop(0, `rgba(255, 255, 255, ${0.016 + burstProgress * 0.04})`);
+    dust.addColorStop(0.28, `rgba(0, 212, 255, ${0.028 + burstProgress * 0.04})`);
+    dust.addColorStop(0.62, `rgba(123, 47, 255, ${0.024 + settleProgress * 0.03})`);
     dust.addColorStop(1, "rgba(123, 47, 255, 0)");
     ctx.fillStyle = dust;
+    ctx.fillRect(0, 0, width, height);
+
+    const safeZone = ctx.createLinearGradient(0, textSafeTopPx - height * 0.1, 0, height);
+    safeZone.addColorStop(0, "rgba(3, 5, 13, 0)");
+    safeZone.addColorStop(0.25, `rgba(3, 5, 13, ${config.textSafeAlpha * 0.36})`);
+    safeZone.addColorStop(0.65, `rgba(3, 5, 13, ${config.textSafeAlpha * 0.72})`);
+    safeZone.addColorStop(1, `rgba(2, 3, 9, ${config.textSafeAlpha})`);
+    ctx.fillStyle = safeZone;
     ctx.fillRect(0, 0, width, height);
 
     ctx.globalCompositeOperation = "lighter";
@@ -237,11 +269,19 @@ function initCosmicPreloader() {
         twinkle;
       const x = (star.x + elapsed * star.drift * 0.01) * width;
       const y = star.y * height;
+      const textZoneFade =
+        y > textSafeTopPx
+          ? config.compact
+            ? 0.16
+            : 0.42
+          : y > textSafeTopPx - height * 0.08
+            ? 0.45
+            : 1;
 
       ctx.fillStyle =
         star.size > 1.3
-          ? `rgba(174, 235, 255, ${alpha})`
-          : `rgba(215, 220, 255, ${alpha * 0.85})`;
+          ? `rgba(174, 235, 255, ${alpha * textZoneFade})`
+          : `rgba(215, 220, 255, ${alpha * 0.85 * textZoneFade})`;
       ctx.beginPath();
       ctx.arc(x, y, star.size, 0, Math.PI * 2);
       ctx.fill();
@@ -264,14 +304,10 @@ function initCosmicPreloader() {
 
       if (ringProgress <= 0 || ringProgress >= 1) return;
 
-      const radius = lerp(
-        minDim * 0.02,
-        minDim * (0.16 + index * 0.08),
-        easeOutExpo(ringProgress),
-      );
+      const radius = lerp(minDim * 0.02, minDim * (0.13 + index * 0.06), easeOutExpo(ringProgress));
       const alpha =
         (1 - ringProgress) *
-        (0.32 - index * 0.06) *
+        (config.compact ? 0.22 : 0.32 - index * 0.06) *
         (1 - revealProgress * 0.75);
 
       ctx.strokeStyle =
@@ -297,23 +333,32 @@ function initCosmicPreloader() {
 
       const travel =
         minDim *
-        (0.06 + particle.spread * 0.3) *
+        (0.06 + particle.spread * config.particleTravel) *
         easeOutCubic(particleProgress);
       const x =
         centerX +
         Math.cos(particle.angle) * travel +
-        Math.sin(elapsed * 0.0012 + index) * 4;
+        Math.sin(elapsed * 0.0012 + index) * config.burstJitter;
       const y =
         centerY +
         Math.sin(particle.angle) * travel +
-        Math.cos(elapsed * 0.0014 + index) * 4;
+        Math.cos(elapsed * 0.0014 + index) * config.burstJitter;
+      const textZoneFade =
+        y > textSafeTopPx
+          ? config.compact
+            ? 0.08
+            : 0.28
+          : y > textSafeTopPx - height * 0.08
+            ? 0.38
+            : 1;
       const alpha =
         particle.alpha *
         (1 - particleProgress) ** 1.35 *
-        (1 - revealProgress * 0.82);
+        (1 - revealProgress * 0.82) *
+        textZoneFade;
       const size =
         particle.size *
-        (1 + burstProgress * 0.45) *
+        (1 + burstProgress * (config.compact ? 0.24 : 0.45)) *
         (1 - particleProgress * 0.38);
 
       ctx.fillStyle =
@@ -335,9 +380,9 @@ function initCosmicPreloader() {
       minDim * 0.01,
       centerX,
       centerY,
-      minDim * 0.24,
+      minDim * config.waveScale,
     );
-    wave.addColorStop(0, `rgba(255, 255, 255, ${0.08 + burstProgress * 0.1})`);
+    wave.addColorStop(0, `rgba(255, 255, 255, ${0.05 + burstProgress * 0.08})`);
     wave.addColorStop(0.18, `rgba(0, 212, 255, ${waveAlpha})`);
     wave.addColorStop(0.42, `rgba(123, 47, 255, ${waveAlpha * 0.7})`);
     wave.addColorStop(1, "rgba(123, 47, 255, 0)");

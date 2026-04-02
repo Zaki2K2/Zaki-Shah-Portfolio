@@ -1,5 +1,9 @@
 // ── Scene Setup ──────────────────────────────────────────────
+(() => {
 const canvas = document.getElementById('bg');
+const bgReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+const prefersReducedMotion = bgReducedMotionQuery.matches;
+const compactViewport = window.innerWidth < 768;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -10,7 +14,7 @@ camera.position.set(0, 0, 5);
 
 // ── Blob Geometry (non-indexed for reliable vertex morphing) ──
 const baseGeo = new THREE.IcosahedronGeometry(1.8, 4);
-const geometry = baseGeo.toNonIndexed();
+const geometry = baseGeo.index ? baseGeo.toNonIndexed() : baseGeo;
 geometry.computeVertexNormals();
 
 const posAttr = geometry.attributes.position;
@@ -91,6 +95,172 @@ const distantPlanet = new THREE.Mesh(
 );
 distantPlanet.position.set(-4.8, 2.25, -7.5);
 scene.add(distantPlanet);
+
+function createSatellite({ bodyColor, panelColor, glowColor, scale = 1 }) {
+  const group = new THREE.Group();
+
+  const bodyMaterial = new THREE.MeshStandardMaterial({
+    color: bodyColor,
+    emissive: 0x274766,
+    emissiveIntensity: 0.55,
+    roughness: 0.34,
+    metalness: 0.82,
+    transparent: true,
+    opacity: 0.84,
+  });
+  const panelMaterial = new THREE.MeshStandardMaterial({
+    color: panelColor,
+    emissive: 0x113c56,
+    emissiveIntensity: 0.72,
+    roughness: 0.42,
+    metalness: 0.78,
+    transparent: true,
+    opacity: 0.72,
+  });
+  const accentMaterial = new THREE.MeshBasicMaterial({
+    color: 0xe5f3ff,
+    transparent: true,
+    opacity: 0.66,
+  });
+
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 0.095, 0.08),
+    bodyMaterial,
+  );
+  const panelLeft = new THREE.Mesh(
+    new THREE.BoxGeometry(0.32, 0.1, 0.012),
+    panelMaterial,
+  );
+  const panelRight = panelLeft.clone();
+  panelLeft.position.x = -0.29;
+  panelRight.position.x = 0.29;
+
+  const mast = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.008, 0.008, 0.18, 8),
+    accentMaterial,
+  );
+  mast.rotation.z = Math.PI * 0.5;
+  mast.position.x = 0.12;
+
+  const dish = new THREE.Mesh(
+    new THREE.SphereGeometry(0.034, 12, 12),
+    new THREE.MeshStandardMaterial({
+      color: 0xbed7eb,
+      emissive: 0x4ea6d7,
+      emissiveIntensity: 0.45,
+      roughness: 0.28,
+      metalness: 0.68,
+      transparent: true,
+      opacity: 0.8,
+    }),
+  );
+  dish.scale.set(1.15, 0.48, 1.15);
+  dish.position.x = 0.245;
+
+  const beacon = new THREE.Mesh(
+    new THREE.SphereGeometry(0.02, 10, 10),
+    new THREE.MeshBasicMaterial({
+      color: glowColor,
+      transparent: true,
+      opacity: 0.92,
+    }),
+  );
+  beacon.position.set(-0.03, 0.052, 0.02);
+
+  const rim = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(0.2, 0.095, 0.08)),
+    new THREE.LineBasicMaterial({
+      color: 0xdff3ff,
+      transparent: true,
+      opacity: 0.24,
+    }),
+  );
+
+  const glow = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      color: glowColor,
+      transparent: true,
+      opacity: 0.16,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  glow.scale.set(0.78, 0.46, 1);
+
+  group.add(glow);
+  group.add(body);
+  group.add(panelLeft);
+  group.add(panelRight);
+  group.add(mast);
+  group.add(dish);
+  group.add(beacon);
+  group.add(rim);
+  group.scale.setScalar(scale);
+  group.renderOrder = 2;
+  scene.add(group);
+
+  return {
+    group,
+    glow,
+    beacon,
+    bodyMaterial,
+    panelMaterial,
+    dishMaterial: dish.material,
+    rimMaterial: rim.material,
+  };
+}
+
+const satelliteConfigs = [
+  {
+    centerX: 5.35,
+    centerY: 2.45,
+    radiusX: 0.95,
+    radiusY: 0.3,
+    z: -7.9,
+    speed: 0.16,
+    phase: 0.6,
+    scale: 1.06,
+    rollSpeed: 0.16,
+    bodyColor: 0xaec8de,
+    panelColor: 0x355f88,
+    glowColor: 0x99e8ff,
+  },
+  {
+    centerX: 1.25,
+    centerY: 3.18,
+    radiusX: 1.15,
+    radiusY: 0.25,
+    z: -9.6,
+    speed: 0.11,
+    phase: 2.2,
+    scale: 0.84,
+    rollSpeed: -0.12,
+    bodyColor: 0xb7c6d6,
+    panelColor: 0x4a5ea0,
+    glowColor: 0xc4d7ff,
+  },
+  {
+    centerX: 4.25,
+    centerY: -2.72,
+    radiusX: 1.35,
+    radiusY: 0.38,
+    z: -6.8,
+    speed: 0.135,
+    phase: 4.5,
+    scale: 1.14,
+    rollSpeed: 0.1,
+    bodyColor: 0xc1d3e4,
+    panelColor: 0x2f678a,
+    glowColor: 0x95f1ff,
+  },
+];
+
+const satelliteCount = prefersReducedMotion ? 2 : compactViewport ? 2 : 3;
+const satellites = satelliteConfigs.slice(0, satelliteCount).map((config, index) => ({
+  ...createSatellite(config),
+  ...config,
+  shimmerOffset: index * 1.3,
+}));
 
 // ── Floating Particles ────────────────────────────────────────
 const particleCount = 1000;
@@ -277,6 +447,28 @@ function animate() {
   distantPlanet.position.x = -4.8 + Math.cos(t * 0.06) * 0.16;
   distantPlanet.material.opacity = 0.12 + Math.sin(t * 0.22) * 0.025;
 
+  satellites.forEach((satellite, index) => {
+    const orbitTime = t * satellite.speed + satellite.phase;
+    const shimmer = 0.5 + 0.5 * Math.sin(t * 1.4 + satellite.shimmerOffset);
+    const beaconPulse = 0.52 + 0.48 * Math.sin(t * (2 + index * 0.28) + satellite.phase);
+
+    satellite.group.position.set(
+      satellite.centerX + Math.cos(orbitTime) * satellite.radiusX,
+      satellite.centerY + Math.sin(orbitTime * 1.08) * satellite.radiusY,
+      satellite.z,
+    );
+    satellite.group.rotation.z = Math.sin(orbitTime) * 0.22;
+    satellite.group.rotation.y = orbitTime * satellite.rollSpeed;
+    satellite.group.rotation.x = Math.cos(orbitTime * 0.8) * 0.08;
+
+    satellite.glow.material.opacity = 0.13 + shimmer * 0.12;
+    satellite.beacon.material.opacity = 0.42 + beaconPulse * 0.52;
+    satellite.bodyMaterial.emissiveIntensity = 0.46 + shimmer * 0.22;
+    satellite.panelMaterial.emissiveIntensity = 0.58 + shimmer * 0.38;
+    satellite.dishMaterial.emissiveIntensity = 0.38 + shimmer * 0.24;
+    satellite.rimMaterial.opacity = 0.18 + shimmer * 0.18;
+  });
+
   // Hue-shift lights
   const hue = (t * 0.05) % 1;
   blobMaterial.emissive.setHSL(hue, 0.8, 0.12);
@@ -290,3 +482,4 @@ function animate() {
 }
 
 animate();
+})();
