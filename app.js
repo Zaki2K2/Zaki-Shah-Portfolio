@@ -502,7 +502,7 @@ document.addEventListener("mouseleave", () => {
 // Ring grows on interactive elements
 document
   .querySelectorAll(
-    "a, button, .card, .service-card, .stat-box, .profile-card, .contact-panel, .hero-panel, .skills-panel",
+    "a, button, .card, .service-card, .stat-box, .profile-card, .contact-panel, .hero-panel, .skills-panel, .signature-panel, .signature-principle, .now-panel, .now-card, .credibility-item, .contact-availability__item",
   )
   .forEach((el) => {
     el.addEventListener("mouseenter", () => ring.classList.add("hovered"));
@@ -617,6 +617,116 @@ const isTouch = window.matchMedia(
 ).matches;
 let ticking = false;
 
+const sceneBySection = {
+  hero: {
+    x: "0px",
+    y: "0px",
+    cyan: "0.12",
+    violet: "0.14",
+    ring: "0.08",
+  },
+  about: {
+    x: "-14px",
+    y: "10px",
+    cyan: "0.1",
+    violet: "0.18",
+    ring: "0.07",
+  },
+  approach: {
+    x: "12px",
+    y: "-6px",
+    cyan: "0.14",
+    violet: "0.16",
+    ring: "0.09",
+  },
+  work: {
+    x: "-10px",
+    y: "16px",
+    cyan: "0.11",
+    violet: "0.15",
+    ring: "0.08",
+  },
+  "main-work": {
+    x: "18px",
+    y: "6px",
+    cyan: "0.15",
+    violet: "0.13",
+    ring: "0.1",
+  },
+  skills: {
+    x: "-8px",
+    y: "-10px",
+    cyan: "0.12",
+    violet: "0.16",
+    ring: "0.08",
+  },
+  now: {
+    x: "10px",
+    y: "-18px",
+    cyan: "0.16",
+    violet: "0.12",
+    ring: "0.09",
+  },
+  contact: {
+    x: "0px",
+    y: "12px",
+    cyan: "0.14",
+    violet: "0.17",
+    ring: "0.08",
+  },
+};
+
+function setSceneAtmosphere(sectionId) {
+  const scene = sceneBySection[sectionId];
+
+  if (!scene) return;
+
+  document.body.style.setProperty("--scene-shift-x", scene.x);
+  document.body.style.setProperty("--scene-shift-y", scene.y);
+  document.body.style.setProperty("--scene-cyan-alpha", scene.cyan);
+  document.body.style.setProperty("--scene-violet-alpha", scene.violet);
+  document.body.style.setProperty("--scene-ring-alpha", scene.ring);
+}
+
+const spotlightTargets = document.querySelectorAll(
+  ".card, .service-card, .about-card, .skills-panel, .contact-panel, .signature-panel, .signature-principle, .now-panel, .now-card, .credibility-item, .contact-availability__item",
+);
+
+if (!isTouch) {
+  spotlightTargets.forEach((surface) => {
+    surface.addEventListener("mousemove", (event) => {
+      const rect = surface.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * 100;
+      const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+      surface.style.setProperty("--spot-x", `${x}%`);
+      surface.style.setProperty("--spot-y", `${y}%`);
+    });
+
+    surface.addEventListener("mouseleave", () => {
+      surface.style.setProperty("--spot-x", "82%");
+      surface.style.setProperty("--spot-y", "18%");
+    });
+  });
+}
+
+const narrativeSections = document.querySelectorAll("section[id]");
+
+if (narrativeSections.length) {
+  const sceneObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setSceneAtmosphere(entry.target.id);
+        }
+      });
+    },
+    { threshold: 0.45 },
+  );
+
+  narrativeSections.forEach((section) => sceneObserver.observe(section));
+}
+
 if (heroPanel && !isTouch) {
   heroPanel.addEventListener("mousemove", (e) => {
     const rect = heroPanel.getBoundingClientRect();
@@ -677,6 +787,29 @@ function onVisible(selector, callback, options = {}) {
 
 // ── Scroll reveal ─────────────────────────────────────────────
 onVisible(".reveal", (el) => el.classList.add("visible"));
+
+const editorialItems = document.querySelectorAll(
+  ".signature-principle, .credibility-item, .now-card, .contact-availability__item",
+);
+
+editorialItems.forEach((item, index) => {
+  item.style.opacity = "0";
+  item.style.transform = "translate3d(0, 24px, 0)";
+  item.style.transition = `opacity 0.55s ease ${index % 4 * 0.08}s, transform 0.55s ease ${index % 4 * 0.08}s`;
+});
+
+onVisible(
+  ".signature-section, .featured-projects, .now-section, #contact",
+  (el) => {
+    el.querySelectorAll(
+      ".signature-principle, .credibility-item, .now-card, .contact-availability__item",
+    ).forEach((item) => {
+      item.style.opacity = "1";
+      item.style.transform = "translate3d(0, 0, 0)";
+    });
+  },
+  { threshold: 0.2 },
+);
 
 // ── Staggered card reveal ─────────────────────────────────────
 const cards = document.querySelectorAll(".card");
