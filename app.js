@@ -1,5 +1,20 @@
 // ── Preloader ─────────────────────────────────────────────────
+if ("scrollRestoration" in history) {
+  history.scrollRestoration = "manual";
+}
+
+window.scrollTo(0, 0);
+
+window.addEventListener("beforeunload", () => {
+  window.scrollTo(0, 0);
+});
+
+window.addEventListener("pageshow", () => {
+  window.scrollTo(0, 0);
+});
+
 window.addEventListener("load", () => {
+  window.scrollTo(0, 0);
   setTimeout(
     () => document.getElementById("preloader").classList.add("hidden"),
     2000,
@@ -63,7 +78,9 @@ document.addEventListener("mouseleave", () => {
 
 // Ring grows on interactive elements
 document
-  .querySelectorAll("a, button, .card, .service-card, .stat-box")
+  .querySelectorAll(
+    "a, button, .card, .service-card, .stat-box, .profile-card, .contact-panel, .hero-panel, .skills-panel",
+  )
   .forEach((el) => {
     el.addEventListener("mouseenter", () => ring.classList.add("hovered"));
     el.addEventListener("mouseleave", () => ring.classList.remove("hovered"));
@@ -73,8 +90,8 @@ document
 const phrases = [
   "Frontend Developer",
   "Angular Developer",
-  "UI/UX-Focused Web Developer",
-  "Web Developer crafting dynamic web apps",
+  "UI-Focused Web Developer",
+  "Clean Code & Responsive Interfaces",
 ];
 let pIdx = 0,
   cIdx = 0,
@@ -171,10 +188,33 @@ window.addEventListener(
 
 // ── Parallax hero — desktop only ─────────────────────────────
 const heroContent = document.querySelector(".hero-content");
+const heroPanel = document.querySelector(".hero-panel");
 const isTouch = window.matchMedia(
   "(hover: none) and (pointer: coarse)",
 ).matches;
 let ticking = false;
+
+if (heroPanel && !isTouch) {
+  heroPanel.addEventListener("mousemove", (e) => {
+    const rect = heroPanel.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const rx = ((e.clientY - rect.top) / rect.height - 0.5) * -4;
+    const ry = ((e.clientX - rect.left) / rect.width - 0.5) * 6;
+
+    heroPanel.style.setProperty("--panel-x", `${x}%`);
+    heroPanel.style.setProperty("--panel-y", `${y}%`);
+    heroPanel.style.setProperty("--panel-rx", `${rx}deg`);
+    heroPanel.style.setProperty("--panel-ry", `${ry}deg`);
+  });
+
+  heroPanel.addEventListener("mouseleave", () => {
+    heroPanel.style.setProperty("--panel-x", "80%");
+    heroPanel.style.setProperty("--panel-y", "18%");
+    heroPanel.style.setProperty("--panel-rx", "0deg");
+    heroPanel.style.setProperty("--panel-ry", "0deg");
+  });
+}
 
 if (!isTouch) {
   window.addEventListener(
@@ -344,11 +384,11 @@ function handleForm(e) {
   btn.textContent = "Sending...";
   btn.disabled = true;
   setTimeout(() => {
-    btn.textContent = "Sent! ✓";
+    btn.textContent = "Sent!";
     success.classList.add("show");
     e.target.reset();
     setTimeout(() => {
-      btn.textContent = "Send Message →";
+      btn.textContent = "Send Message";
       btn.disabled = false;
       success.classList.remove("show");
     }, 4000);

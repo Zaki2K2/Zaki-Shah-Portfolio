@@ -37,6 +37,61 @@ const wireBlob = new THREE.Mesh(geometry, wireMat);
 wireBlob.position.copy(blob.position);
 scene.add(wireBlob);
 
+// Orbital accents around the main energy sphere
+const orbitGroup = new THREE.Group();
+orbitGroup.position.copy(blob.position);
+scene.add(orbitGroup);
+
+const orbitRingConfigs = [
+  { radius: 2.45, tube: 0.014, color: 0x6fd6ff, opacity: 0.16, rx: 1.22, ry: 0.22, speed: 0.0032 },
+  { radius: 3.2, tube: 0.01, color: 0x8b5cff, opacity: 0.1, rx: 1.02, ry: -0.34, speed: -0.0022 },
+];
+
+const orbitRings = orbitRingConfigs.map((config) => {
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(config.radius, config.tube, 10, 180),
+    new THREE.MeshBasicMaterial({
+      color: config.color,
+      transparent: true,
+      opacity: config.opacity,
+    }),
+  );
+  ring.rotation.x = config.rx;
+  ring.rotation.y = config.ry;
+  orbitGroup.add(ring);
+  return { mesh: ring, speed: config.speed, baseX: config.rx, baseY: config.ry };
+});
+
+const orbiter1 = new THREE.Mesh(
+  new THREE.SphereGeometry(0.13, 20, 20),
+  new THREE.MeshBasicMaterial({
+    color: 0x8ef3ff,
+    transparent: true,
+    opacity: 0.9,
+  }),
+);
+const orbiter2 = new THREE.Mesh(
+  new THREE.SphereGeometry(0.09, 18, 18),
+  new THREE.MeshBasicMaterial({
+    color: 0xc388ff,
+    transparent: true,
+    opacity: 0.78,
+  }),
+);
+orbitGroup.add(orbiter1);
+orbitGroup.add(orbiter2);
+
+const distantPlanet = new THREE.Mesh(
+  new THREE.SphereGeometry(0.95, 28, 28),
+  new THREE.MeshBasicMaterial({
+    color: 0x15284d,
+    transparent: true,
+    opacity: 0.14,
+  }),
+);
+distantPlanet.position.set(-4.8, 2.25, -7.5);
+scene.add(distantPlanet);
+
 // ── Floating Particles ────────────────────────────────────────
 const particleCount = 1000;
 const pGeo = new THREE.BufferGeometry();
@@ -190,10 +245,37 @@ function animate() {
   blob.position.y     = blobCurrent.y;
   wireBlob.position.x = blobCurrent.x;
   wireBlob.position.y = blobCurrent.y;
+  orbitGroup.position.x = blobCurrent.x;
+  orbitGroup.position.y = blobCurrent.y;
 
   blob.rotation.x = t * 0.15 + smooth.y * 0.5;
   blob.rotation.y = t * 0.20 + smooth.x * 0.5;
   wireBlob.rotation.copy(blob.rotation);
+
+  orbitRings.forEach(({ mesh, speed, baseX, baseY }, index) => {
+    mesh.rotation.x = baseX + Math.sin(t * 0.22 + index) * 0.035;
+    mesh.rotation.y = baseY + Math.cos(t * 0.18 + index * 0.7) * 0.045;
+    mesh.rotation.z = t * speed * 18;
+  });
+
+  const orbitDriftX = smooth.x * 0.12;
+  const orbitDriftY = smooth.y * 0.08;
+  orbiter1.position.set(
+    Math.cos(t * 0.72) * 2.5 + orbitDriftX,
+    Math.sin(t * 0.72) * 0.72 + Math.sin(t * 0.24) * 0.18 + orbitDriftY,
+    Math.sin(t * 0.72) * 1.12,
+  );
+  orbiter2.position.set(
+    Math.cos(-t * 0.46 + 1.15) * 3.18 - orbitDriftX * 0.7,
+    Math.sin(-t * 0.46 + 1.15) * 1.06 - Math.cos(t * 0.2) * 0.14,
+    Math.cos(t * 0.46 + 0.55) * 0.86,
+  );
+  orbiter1.material.opacity = 0.72 + Math.sin(t * 1.4) * 0.14;
+  orbiter2.material.opacity = 0.58 + Math.cos(t * 1.1) * 0.12;
+
+  distantPlanet.position.y = 2.25 + Math.sin(t * 0.08) * 0.12;
+  distantPlanet.position.x = -4.8 + Math.cos(t * 0.06) * 0.16;
+  distantPlanet.material.opacity = 0.12 + Math.sin(t * 0.22) * 0.025;
 
   // Hue-shift lights
   const hue = (t * 0.05) % 1;
