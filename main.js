@@ -96,6 +96,73 @@ const distantPlanet = new THREE.Mesh(
 distantPlanet.position.set(-4.8, 2.25, -7.5);
 scene.add(distantPlanet);
 
+const galaxyPrimary = new THREE.Color(0x6ddcff);
+const galaxySecondary = new THREE.Color(0x8d5bff);
+const galaxyCore = new THREE.Color(0xf4f7ff);
+
+function createGalaxyLayer({
+  count,
+  arms = 4,
+  innerRadius = 0.8,
+  outerRadius = 8,
+  spin = 1.45,
+  verticalScale = 0.24,
+  depthSpread = 1.8,
+  jitter = 0.35,
+  size = 0.04,
+  opacity = 0.2,
+}) {
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const geometry = new THREE.BufferGeometry();
+  const mixed = new THREE.Color();
+
+  for (let i = 0; i < count; i += 1) {
+    const arm = i % arms;
+    const radialBias = Math.pow(Math.random(), 1.42);
+    const radius = innerRadius + radialBias * (outerRadius - innerRadius);
+    const baseAngle = (arm / arms) * Math.PI * 2 + radius * spin;
+    const angle = baseAngle + (Math.random() - 0.5) * (0.28 + radius * 0.035);
+    const verticalWave = Math.sin(radius * 0.72 + arm * 0.85) * 0.08;
+
+    positions[i * 3] =
+      Math.cos(angle) * radius + (Math.random() - 0.5) * jitter;
+    positions[i * 3 + 1] =
+      Math.sin(angle) * radius * verticalScale +
+      (Math.random() - 0.5) * verticalScale * 1.35 +
+      verticalWave;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * depthSpread;
+
+    if (radius < innerRadius + (outerRadius - innerRadius) * 0.22) {
+      mixed.copy(galaxyCore).lerp(galaxyPrimary, Math.random() * 0.45);
+    } else {
+      mixed
+        .copy(Math.random() > 0.52 ? galaxyPrimary : galaxySecondary)
+        .lerp(galaxyCore, Math.random() * 0.2);
+    }
+
+    colors[i * 3] = mixed.r;
+    colors[i * 3 + 1] = mixed.g;
+    colors[i * 3 + 2] = mixed.b;
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  return new THREE.Points(
+    geometry,
+    new THREE.PointsMaterial({
+      size,
+      transparent: true,
+      opacity,
+      vertexColors: true,
+      sizeAttenuation: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+}
+
 function createSatellite({ bodyColor, panelColor, glowColor, scale = 1 }) {
   const group = new THREE.Group();
 
@@ -262,8 +329,68 @@ const satellites = satelliteConfigs.slice(0, satelliteCount).map((config, index)
   shimmerOffset: index * 1.3,
 }));
 
+const galaxyGroup = new THREE.Group();
+galaxyGroup.position.set(-0.2, 0.22, -10.2);
+galaxyGroup.rotation.x = -0.28;
+galaxyGroup.rotation.z = 0.24;
+scene.add(galaxyGroup);
+
+const galaxyMainLayer = createGalaxyLayer({
+  count: prefersReducedMotion ? 280 : compactViewport ? 520 : 860,
+  arms: 4,
+  innerRadius: 0.8,
+  outerRadius: compactViewport ? 6.8 : 8.6,
+  spin: 1.58,
+  verticalScale: 0.23,
+  depthSpread: 1.4,
+  jitter: 0.26,
+  size: compactViewport ? 0.04 : 0.045,
+  opacity: prefersReducedMotion ? 0.13 : 0.2,
+});
+const galaxyDustLayer = createGalaxyLayer({
+  count: prefersReducedMotion ? 220 : compactViewport ? 420 : 720,
+  arms: 5,
+  innerRadius: 1.3,
+  outerRadius: compactViewport ? 8 : 9.8,
+  spin: 1.18,
+  verticalScale: 0.34,
+  depthSpread: 2.2,
+  jitter: 0.48,
+  size: compactViewport ? 0.03 : 0.035,
+  opacity: prefersReducedMotion ? 0.08 : 0.12,
+});
+const galaxyClusterLayer = createGalaxyLayer({
+  count: prefersReducedMotion ? 120 : compactViewport ? 180 : 260,
+  arms: 3,
+  innerRadius: 0.6,
+  outerRadius: compactViewport ? 5.6 : 7.2,
+  spin: 1.9,
+  verticalScale: 0.17,
+  depthSpread: 1,
+  jitter: 0.18,
+  size: compactViewport ? 0.055 : 0.065,
+  opacity: prefersReducedMotion ? 0.12 : 0.18,
+});
+
+const galaxyBelt = new THREE.Mesh(
+  new THREE.TorusGeometry(compactViewport ? 5.9 : 7.2, 0.05, 8, 220),
+  new THREE.MeshBasicMaterial({
+    color: 0x1f3f67,
+    transparent: true,
+    opacity: prefersReducedMotion ? 0.035 : 0.06,
+    depthWrite: false,
+  }),
+);
+galaxyBelt.rotation.x = 1.26;
+galaxyBelt.rotation.y = -0.22;
+
+galaxyGroup.add(galaxyDustLayer);
+galaxyGroup.add(galaxyMainLayer);
+galaxyGroup.add(galaxyClusterLayer);
+galaxyGroup.add(galaxyBelt);
+
 // ── Floating Particles ────────────────────────────────────────
-const particleCount = 1000;
+const particleCount = prefersReducedMotion ? 360 : compactViewport ? 580 : 860;
 const pGeo = new THREE.BufferGeometry();
 const pPositions = new Float32Array(particleCount * 3);
 for (let i = 0; i < particleCount * 3; i++) {
@@ -468,6 +595,19 @@ function animate() {
     satellite.dishMaterial.emissiveIntensity = 0.38 + shimmer * 0.24;
     satellite.rimMaterial.opacity = 0.18 + shimmer * 0.18;
   });
+
+  galaxyGroup.position.x = -0.2 + smooth.x * (compactViewport ? 0.08 : 0.16);
+  galaxyGroup.position.y = 0.22 + smooth.y * (compactViewport ? 0.05 : 0.12);
+  galaxyGroup.rotation.x = -0.28 + smooth.y * 0.04;
+  galaxyGroup.rotation.z = 0.24 + t * (prefersReducedMotion ? 0.0025 : 0.0075);
+  galaxyMainLayer.rotation.z = t * 0.018;
+  galaxyDustLayer.rotation.z = -t * 0.009;
+  galaxyDustLayer.rotation.y = Math.sin(t * 0.08) * 0.06;
+  galaxyClusterLayer.rotation.z = t * 0.014 + 0.45;
+  galaxyClusterLayer.rotation.x = Math.sin(t * 0.12) * 0.04;
+  galaxyBelt.rotation.z = t * 0.02;
+  galaxyBelt.material.opacity =
+    (prefersReducedMotion ? 0.03 : 0.055) + Math.sin(t * 0.24) * 0.01;
 
   // Hue-shift lights
   const hue = (t * 0.05) % 1;

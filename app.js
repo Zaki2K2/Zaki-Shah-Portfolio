@@ -567,7 +567,7 @@ document.addEventListener("mouseleave", () => {
 // Ring grows on interactive elements
 document
   .querySelectorAll(
-    "a, button, .card, .service-card, .stat-box, .profile-card, .contact-panel, .skills-panel, .signature-panel, .signature-principle, .now-panel, .now-card, .credibility-item, .contact-availability__item",
+    "a, button, .card, .service-card, .stat-box, .profile-card, .contact-panel, .skills-panel, .signature-panel, .signature-principle, .now-panel, .now-card, .credibility-item, .contact-availability__item, .skill-meter-card, .identity-band, .capability-card, .core-stack-strip",
   )
   .forEach((el) => {
     el.addEventListener("mouseenter", () => ring.classList.add("hovered"));
@@ -576,10 +576,10 @@ document
 
 // ── Typewriter ────────────────────────────────────────────────
 const phrases = [
-  "Full Stack Web Developer",
-  "Frontend-First Developer",
-  "Angular Developer",
-  "Building Connected Web Products",
+  "Frontend-First Full Stack Developer",
+  "Angular and React UI Systems",
+  "API-First Product Builder",
+  "Performance and Scalability Minded",
 ];
 let pIdx = 0,
   cIdx = 0,
@@ -718,11 +718,11 @@ const sceneBySection = {
     ring: "0.1",
   },
   skills: {
-    x: "-8px",
-    y: "-10px",
-    cyan: "0.12",
-    violet: "0.16",
-    ring: "0.08",
+    x: "-18px",
+    y: "-8px",
+    cyan: "0.16",
+    violet: "0.2",
+    ring: "0.11",
   },
   now: {
     x: "10px",
@@ -753,7 +753,7 @@ function setSceneAtmosphere(sectionId) {
 }
 
 const spotlightTargets = document.querySelectorAll(
-  ".card, .service-card, .about-card, .skills-panel, .contact-panel, .signature-panel, .signature-principle, .now-panel, .now-card, .credibility-item, .contact-availability__item",
+  ".card, .service-card, .about-card, .skills-panel, .contact-panel, .signature-panel, .signature-principle, .now-panel, .now-card, .credibility-item, .contact-availability__item, .skill-meter-card, .identity-band, .capability-card, .core-stack-strip",
 );
 
 if (!isTouch) {
