@@ -163,6 +163,11 @@ function initCosmicPreloader() {
     if (preloaderProgress) {
       const progress = clamp((elapsed / config.duration) * 100, 0, 100);
       preloaderProgress.textContent = `${String(Math.round(progress)).padStart(2, "0")}%`;
+      preloader.style.setProperty("--preloader-progress", `${progress.toFixed(2)}%`);
+      preloader.style.setProperty(
+        "--preloader-angle",
+        `${(-110 + progress * 3.6).toFixed(2)}deg`,
+      );
     }
   }
 
@@ -460,6 +465,21 @@ function initCosmicPreloader() {
       "--ring-opacity",
       clamp(ringOpacity, 0.02, 0.42).toFixed(3),
     );
+    preloader.style.setProperty(
+      "--phase-energy",
+      clamp(
+        0.08 +
+          singularityProgress * 0.5 +
+          burstProgress * 0.34 -
+          revealProgress * 0.18,
+        0,
+        1,
+      ).toFixed(3),
+    );
+    preloader.style.setProperty(
+      "--burst-progress",
+      clamp(burstProgress * (1 - revealProgress * 0.4), 0, 1).toFixed(3),
+    );
 
     if (!preloaderEnded) {
       preloaderRaf = requestAnimationFrame(renderPreloader);
@@ -556,10 +576,10 @@ document
 
 // ── Typewriter ────────────────────────────────────────────────
 const phrases = [
-  "Frontend Developer",
+  "Full Stack Web Developer",
+  "Frontend-First Developer",
   "Angular Developer",
-  "Frontend-First, Backend-Aware",
-  "Building Connected Web Interfaces",
+  "Building Connected Web Products",
 ];
 let pIdx = 0,
   cIdx = 0,
