@@ -606,7 +606,7 @@ function typeWriter() {
 }
 setTimeout(typeWriter, 2400);
 
-// ── Letter split + magnetic + glow ripple ────────────────────
+// ── Letter split ─────────────────────────────────────────────
 document.querySelectorAll(".word").forEach((word) => {
   const text = word.textContent;
   word.textContent = "";
@@ -615,52 +615,6 @@ document.querySelectorAll(".word").forEach((word) => {
     span.className = "letter";
     span.textContent = char === " " ? "\u00A0" : char;
     word.appendChild(span);
-  });
-});
-
-// Magnetic: each letter drifts toward cursor when nearby
-const titleLetters = [...document.querySelectorAll(".title .letter")];
-const ATTRACT_RADIUS = 120; // px — how close cursor needs to be
-const ATTRACT_STRENGTH = 0.35; // 0–1, how far they move
-
-window.addEventListener(
-  "mousemove",
-  (e) => {
-    titleLetters.forEach((letter) => {
-      const r = letter.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      const dx = e.clientX - cx;
-      const dy = e.clientY - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist < ATTRACT_RADIUS) {
-        const force = (1 - dist / ATTRACT_RADIUS) * ATTRACT_STRENGTH;
-        const lx = dx * force;
-        const ly = dy * force;
-        letter.style.setProperty("--lx", lx + "px");
-        letter.style.setProperty("--ly", ly + "px");
-        letter.style.transform = `translate3d(${lx}px, ${ly}px, 0)`;
-        letter.style.transition = "transform 0.1s ease";
-      } else {
-        letter.style.setProperty("--lx", "0px");
-        letter.style.setProperty("--ly", "0px");
-        letter.style.transform = "translate3d(0,0,0)";
-        letter.style.transition =
-          "transform 0.5s cubic-bezier(0.34,1.56,0.64,1)";
-      }
-    });
-  },
-  { passive: true },
-);
-
-// Glow ripple: sweeps across all letters on title hover
-document.querySelector(".title").addEventListener("mouseenter", () => {
-  titleLetters.forEach((letter, i) => {
-    setTimeout(() => {
-      letter.classList.add("glow");
-      setTimeout(() => letter.classList.remove("glow"), 600);
-    }, i * 55);
   });
 });
 
@@ -975,20 +929,65 @@ onVisible(
 );
 
 // ── Contact form ──────────────────────────────────────────────
-function handleForm(e) {
+async function handleForm(e) {
   e.preventDefault();
-  const btn = e.target.querySelector(".form-btn");
-  const success = document.getElementById("formSuccess");
+
+  const form = e.target;
+  const btn = form.querySelector(".form-btn");
+  const status = document.getElementById("formStatus");
+  const defaultLabel = btn.dataset.defaultLabel || btn.textContent.trim();
+  const formData = new FormData(form);
+  const email = formData.get("email");
+
+  btn.dataset.defaultLabel = defaultLabel;
   btn.textContent = "Sending...";
   btn.disabled = true;
-  setTimeout(() => {
+
+  status.textContent = "";
+  status.className = "form-status";
+
+  if (email) {
+    formData.set("_replyto", String(email));
+  }
+
+  try {
+    const response = await fetch(form.action, {
+      method: form.method,
+      body: formData,
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      let message = "Something went wrong. Please try again.";
+
+      try {
+        const data = await response.json();
+        if (Array.isArray(data?.errors) && data.errors.length) {
+          message = data.errors.map((item) => item.message).join(" ");
+        }
+      } catch (error) {
+        // Ignore JSON parse issues and use the default error message.
+      }
+
+      throw new Error(message);
+    }
+
+    form.reset();
     btn.textContent = "Sent!";
-    success.classList.add("show");
-    e.target.reset();
-    setTimeout(() => {
-      btn.textContent = "Send Message";
+    status.textContent = "Message sent successfully. I'll get back to you soon.";
+    status.className = "form-status form-status--success show";
+
+    window.setTimeout(() => {
+      btn.textContent = defaultLabel;
       btn.disabled = false;
-      success.classList.remove("show");
-    }, 4000);
-  }, 1200);
+    }, 1800);
+  } catch (error) {
+    btn.textContent = "Try Again";
+    btn.disabled = false;
+    status.textContent =
+      error?.message || "Unable to send your message right now. Please try again.";
+    status.className = "form-status form-status--error show";
+  }
 }

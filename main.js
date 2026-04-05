@@ -1,149 +1,88 @@
-// ── Scene Setup ──────────────────────────────────────────────
 (() => {
 const canvas = document.getElementById('bg');
-const bgReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-const prefersReducedMotion = bgReducedMotionQuery.matches;
+const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+const prefersReducedMotion = reducedMotionQuery.matches;
 const compactViewport = window.innerWidth < 768;
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: true,
+  alpha: true,
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, compactViewport ? 1.5 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
+if ('outputColorSpace' in renderer) {
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+}
+if ('toneMapping' in renderer) {
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = compactViewport ? 0.92 : 0.98;
+}
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 0, 5);
+scene.fog = new THREE.FogExp2(0x010204, compactViewport ? 0.02 : 0.017);
 
-// ── Blob Geometry (non-indexed for reliable vertex morphing) ──
-const baseGeo = new THREE.IcosahedronGeometry(1.8, 4);
-const geometry = baseGeo.index ? baseGeo.toNonIndexed() : baseGeo;
-geometry.computeVertexNormals();
+const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 160);
+camera.position.set(0, 0.35, 6.2);
 
-const posAttr = geometry.attributes.position;
-const originalPositions = new Float32Array(posAttr.array);
+const palette = {
+  sky: new THREE.Color(0x010204),
+  cyan: new THREE.Color(0x6ed5ff),
+  violet: new THREE.Color(0x756dff),
+  blue: new THREE.Color(0x0b1630),
+  gold: new THREE.Color(0xffc15a),
+  core: new THREE.Color(0xeef4ff),
+};
 
-const blobMaterial = new THREE.MeshStandardMaterial({
-  color: 0x7b2fff,
-  emissive: 0x2a0080,
-  roughness: 0.3,
-  metalness: 0.6,
-});
-const blob = new THREE.Mesh(geometry, blobMaterial);
-blob.position.set(2.2, 0, 0);
-scene.add(blob);
-
-// Wireframe overlay shares same geometry
-const wireMat = new THREE.MeshBasicMaterial({
-  color: 0x00d4ff,
-  wireframe: true,
-  transparent: true,
-  opacity: 0.1,
-});
-const wireBlob = new THREE.Mesh(geometry, wireMat);
-wireBlob.position.copy(blob.position);
-scene.add(wireBlob);
-
-// Orbital accents around the main energy sphere
-const orbitGroup = new THREE.Group();
-orbitGroup.position.copy(blob.position);
-scene.add(orbitGroup);
-
-const orbitRingConfigs = [
-  { radius: 2.45, tube: 0.014, color: 0x6fd6ff, opacity: 0.16, rx: 1.22, ry: 0.22, speed: 0.0032 },
-  { radius: 3.2, tube: 0.01, color: 0x8b5cff, opacity: 0.1, rx: 1.02, ry: -0.34, speed: -0.0022 },
-];
-
-const orbitRings = orbitRingConfigs.map((config) => {
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(config.radius, config.tube, 10, 180),
+function createGlowSphere(radius, color, opacity, segments = 26) {
+  return new THREE.Mesh(
+    new THREE.SphereGeometry(radius, segments, segments),
     new THREE.MeshBasicMaterial({
-      color: config.color,
+      color,
       transparent: true,
-      opacity: config.opacity,
+      opacity,
+      depthWrite: false,
     }),
   );
-  ring.rotation.x = config.rx;
-  ring.rotation.y = config.ry;
-  orbitGroup.add(ring);
-  return { mesh: ring, speed: config.speed, baseX: config.rx, baseY: config.ry };
-});
-
-const orbiter1 = new THREE.Mesh(
-  new THREE.SphereGeometry(0.13, 20, 20),
-  new THREE.MeshBasicMaterial({
-    color: 0x8ef3ff,
-    transparent: true,
-    opacity: 0.9,
-  }),
-);
-const orbiter2 = new THREE.Mesh(
-  new THREE.SphereGeometry(0.09, 18, 18),
-  new THREE.MeshBasicMaterial({
-    color: 0xc388ff,
-    transparent: true,
-    opacity: 0.78,
-  }),
-);
-orbitGroup.add(orbiter1);
-orbitGroup.add(orbiter2);
-
-const distantPlanet = new THREE.Mesh(
-  new THREE.SphereGeometry(0.95, 28, 28),
-  new THREE.MeshBasicMaterial({
-    color: 0x15284d,
-    transparent: true,
-    opacity: 0.14,
-  }),
-);
-distantPlanet.position.set(-4.8, 2.25, -7.5);
-scene.add(distantPlanet);
-
-const galaxyPrimary = new THREE.Color(0x6ddcff);
-const galaxySecondary = new THREE.Color(0x8d5bff);
-const galaxyCore = new THREE.Color(0xf4f7ff);
+}
 
 function createGalaxyLayer({
   count,
   arms = 4,
-  innerRadius = 0.8,
-  outerRadius = 8,
-  spin = 1.45,
-  verticalScale = 0.24,
-  depthSpread = 1.8,
+  innerRadius = 1,
+  outerRadius = 10,
+  spin = 1.2,
+  verticalScale = 0.26,
+  depthSpread = 2.2,
   jitter = 0.35,
-  size = 0.04,
-  opacity = 0.2,
+  size = 0.045,
+  opacity = 0.18,
 }) {
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
   const geometry = new THREE.BufferGeometry();
-  const mixed = new THREE.Color();
+  const tint = new THREE.Color();
 
   for (let i = 0; i < count; i += 1) {
     const arm = i % arms;
-    const radialBias = Math.pow(Math.random(), 1.42);
+    const radialBias = Math.pow(Math.random(), 1.4);
     const radius = innerRadius + radialBias * (outerRadius - innerRadius);
     const baseAngle = (arm / arms) * Math.PI * 2 + radius * spin;
-    const angle = baseAngle + (Math.random() - 0.5) * (0.28 + radius * 0.035);
-    const verticalWave = Math.sin(radius * 0.72 + arm * 0.85) * 0.08;
+    const angle = baseAngle + (Math.random() - 0.5) * (0.24 + radius * 0.03);
 
     positions[i * 3] =
       Math.cos(angle) * radius + (Math.random() - 0.5) * jitter;
     positions[i * 3 + 1] =
-      Math.sin(angle) * radius * verticalScale +
-      (Math.random() - 0.5) * verticalScale * 1.35 +
-      verticalWave;
+      Math.sin(angle) * radius * verticalScale + (Math.random() - 0.5) * 0.45;
     positions[i * 3 + 2] = (Math.random() - 0.5) * depthSpread;
 
-    if (radius < innerRadius + (outerRadius - innerRadius) * 0.22) {
-      mixed.copy(galaxyCore).lerp(galaxyPrimary, Math.random() * 0.45);
-    } else {
-      mixed
-        .copy(Math.random() > 0.52 ? galaxyPrimary : galaxySecondary)
-        .lerp(galaxyCore, Math.random() * 0.2);
-    }
+    tint
+      .copy(Math.random() > 0.5 ? palette.cyan : palette.violet)
+      .lerp(palette.core, Math.random() * 0.22);
 
-    colors[i * 3] = mixed.r;
-    colors[i * 3 + 1] = mixed.g;
-    colors[i * 3 + 2] = mixed.b;
+    colors[i * 3] = tint.r;
+    colors[i * 3 + 1] = tint.g;
+    colors[i * 3 + 2] = tint.b;
   }
 
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -163,460 +102,252 @@ function createGalaxyLayer({
   );
 }
 
-function createSatellite({ bodyColor, panelColor, glowColor, scale = 1 }) {
+function createPlanet({
+  radius,
+  color,
+  emissive,
+  position,
+  glowColor,
+  glowOpacity,
+  ring = null,
+  opacity = 1,
+}) {
   const group = new THREE.Group();
 
-  const bodyMaterial = new THREE.MeshStandardMaterial({
-    color: bodyColor,
-    emissive: 0x274766,
-    emissiveIntensity: 0.55,
-    roughness: 0.34,
-    metalness: 0.82,
-    transparent: true,
-    opacity: 0.84,
-  });
-  const panelMaterial = new THREE.MeshStandardMaterial({
-    color: panelColor,
-    emissive: 0x113c56,
-    emissiveIntensity: 0.72,
-    roughness: 0.42,
-    metalness: 0.78,
-    transparent: true,
-    opacity: 0.72,
-  });
-  const accentMaterial = new THREE.MeshBasicMaterial({
-    color: 0xe5f3ff,
-    transparent: true,
-    opacity: 0.66,
-  });
-
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(0.2, 0.095, 0.08),
-    bodyMaterial,
-  );
-  const panelLeft = new THREE.Mesh(
-    new THREE.BoxGeometry(0.32, 0.1, 0.012),
-    panelMaterial,
-  );
-  const panelRight = panelLeft.clone();
-  panelLeft.position.x = -0.29;
-  panelRight.position.x = 0.29;
-
-  const mast = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.008, 0.008, 0.18, 8),
-    accentMaterial,
-  );
-  mast.rotation.z = Math.PI * 0.5;
-  mast.position.x = 0.12;
-
-  const dish = new THREE.Mesh(
-    new THREE.SphereGeometry(0.034, 12, 12),
+  const planet = new THREE.Mesh(
+    new THREE.SphereGeometry(radius, compactViewport ? 26 : 34, compactViewport ? 26 : 34),
     new THREE.MeshStandardMaterial({
-      color: 0xbed7eb,
-      emissive: 0x4ea6d7,
-      emissiveIntensity: 0.45,
-      roughness: 0.28,
-      metalness: 0.68,
-      transparent: true,
-      opacity: 0.8,
-    }),
-  );
-  dish.scale.set(1.15, 0.48, 1.15);
-  dish.position.x = 0.245;
-
-  const beacon = new THREE.Mesh(
-    new THREE.SphereGeometry(0.02, 10, 10),
-    new THREE.MeshBasicMaterial({
-      color: glowColor,
-      transparent: true,
-      opacity: 0.92,
-    }),
-  );
-  beacon.position.set(-0.03, 0.052, 0.02);
-
-  const rim = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(0.2, 0.095, 0.08)),
-    new THREE.LineBasicMaterial({
-      color: 0xdff3ff,
-      transparent: true,
-      opacity: 0.24,
+      color,
+      emissive,
+      emissiveIntensity: 0.34,
+      roughness: 0.78,
+      metalness: 0.08,
+      transparent: opacity < 1,
+      opacity,
     }),
   );
 
-  const glow = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      color: glowColor,
-      transparent: true,
-      opacity: 0.16,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    }),
-  );
-  glow.scale.set(0.78, 0.46, 1);
+  const atmosphere = createGlowSphere(radius * 1.18, glowColor, glowOpacity, 22);
+  atmosphere.scale.set(1, 0.96, 1);
 
-  group.add(glow);
-  group.add(body);
-  group.add(panelLeft);
-  group.add(panelRight);
-  group.add(mast);
-  group.add(dish);
-  group.add(beacon);
-  group.add(rim);
-  group.scale.setScalar(scale);
-  group.renderOrder = 2;
-  scene.add(group);
+  group.add(atmosphere);
+  group.add(planet);
+
+  let ringMesh = null;
+  if (ring) {
+    ringMesh = new THREE.Mesh(
+      new THREE.TorusGeometry(radius * ring.radiusScale, ring.tube, 10, 180),
+      new THREE.MeshBasicMaterial({
+        color: ring.color,
+        transparent: true,
+        opacity: ring.opacity,
+      }),
+    );
+    ringMesh.rotation.set(ring.rotation[0], ring.rotation[1], ring.rotation[2]);
+    ringMesh.scale.set(ring.scale[0], ring.scale[1], ring.scale[2]);
+    group.add(ringMesh);
+  }
+
+  group.position.set(position[0], position[1], position[2]);
 
   return {
     group,
-    glow,
-    beacon,
-    bodyMaterial,
-    panelMaterial,
-    dishMaterial: dish.material,
-    rimMaterial: rim.material,
+    planet,
+    atmosphere,
+    ring: ringMesh,
+    basePosition: group.position.clone(),
   };
 }
 
-const satelliteConfigs = [
-  {
-    centerX: 5.35,
-    centerY: 2.45,
-    radiusX: 0.95,
-    radiusY: 0.3,
-    z: -7.9,
-    speed: 0.16,
-    phase: 0.6,
-    scale: 1.06,
-    rollSpeed: 0.16,
-    bodyColor: 0xaec8de,
-    panelColor: 0x355f88,
-    glowColor: 0x99e8ff,
-  },
-  {
-    centerX: 1.25,
-    centerY: 3.18,
-    radiusX: 1.15,
-    radiusY: 0.25,
-    z: -9.6,
-    speed: 0.11,
-    phase: 2.2,
-    scale: 0.84,
-    rollSpeed: -0.12,
-    bodyColor: 0xb7c6d6,
-    panelColor: 0x4a5ea0,
-    glowColor: 0xc4d7ff,
-  },
-  {
-    centerX: 4.25,
-    centerY: -2.72,
-    radiusX: 1.35,
-    radiusY: 0.38,
-    z: -6.8,
-    speed: 0.135,
-    phase: 4.5,
-    scale: 1.14,
-    rollSpeed: 0.1,
-    bodyColor: 0xc1d3e4,
-    panelColor: 0x2f678a,
-    glowColor: 0x95f1ff,
-  },
-];
-
-const satelliteCount = prefersReducedMotion ? 2 : compactViewport ? 2 : 3;
-const satellites = satelliteConfigs.slice(0, satelliteCount).map((config, index) => ({
-  ...createSatellite(config),
-  ...config,
-  shimmerOffset: index * 1.3,
-}));
-
 const galaxyGroup = new THREE.Group();
-galaxyGroup.position.set(-0.2, 0.22, -10.2);
-galaxyGroup.rotation.x = -0.28;
-galaxyGroup.rotation.z = 0.24;
+galaxyGroup.position.set(-0.3, 0.4, -18);
+galaxyGroup.rotation.x = -0.3;
+galaxyGroup.rotation.z = 0.16;
 scene.add(galaxyGroup);
 
-const galaxyMainLayer = createGalaxyLayer({
-  count: prefersReducedMotion ? 280 : compactViewport ? 520 : 860,
+const galaxyMain = createGalaxyLayer({
+  count: prefersReducedMotion ? 240 : compactViewport ? 460 : 820,
   arms: 4,
-  innerRadius: 0.8,
-  outerRadius: compactViewport ? 6.8 : 8.6,
-  spin: 1.58,
-  verticalScale: 0.23,
-  depthSpread: 1.4,
-  jitter: 0.26,
-  size: compactViewport ? 0.04 : 0.045,
-  opacity: prefersReducedMotion ? 0.13 : 0.2,
-});
-const galaxyDustLayer = createGalaxyLayer({
-  count: prefersReducedMotion ? 220 : compactViewport ? 420 : 720,
-  arms: 5,
-  innerRadius: 1.3,
-  outerRadius: compactViewport ? 8 : 9.8,
-  spin: 1.18,
-  verticalScale: 0.34,
+  innerRadius: 1.2,
+  outerRadius: compactViewport ? 8.4 : 10.2,
+  spin: 1.42,
+  verticalScale: 0.2,
   depthSpread: 2.2,
-  jitter: 0.48,
-  size: compactViewport ? 0.03 : 0.035,
+  jitter: 0.28,
+  size: compactViewport ? 0.035 : 0.04,
   opacity: prefersReducedMotion ? 0.08 : 0.12,
 });
-const galaxyClusterLayer = createGalaxyLayer({
-  count: prefersReducedMotion ? 120 : compactViewport ? 180 : 260,
-  arms: 3,
-  innerRadius: 0.6,
-  outerRadius: compactViewport ? 5.6 : 7.2,
-  spin: 1.9,
-  verticalScale: 0.17,
-  depthSpread: 1,
-  jitter: 0.18,
-  size: compactViewport ? 0.055 : 0.065,
-  opacity: prefersReducedMotion ? 0.12 : 0.18,
+const galaxyDust = createGalaxyLayer({
+  count: prefersReducedMotion ? 180 : compactViewport ? 320 : 620,
+  arms: 5,
+  innerRadius: 2,
+  outerRadius: compactViewport ? 10 : 12.4,
+  spin: 1.05,
+  verticalScale: 0.26,
+  depthSpread: 3,
+  jitter: 0.5,
+  size: compactViewport ? 0.024 : 0.03,
+  opacity: prefersReducedMotion ? 0.05 : 0.08,
 });
+galaxyGroup.add(galaxyDust);
+galaxyGroup.add(galaxyMain);
 
-const galaxyBelt = new THREE.Mesh(
-  new THREE.TorusGeometry(compactViewport ? 5.9 : 7.2, 0.05, 8, 220),
+const sunGroup = new THREE.Group();
+const sun = new THREE.Mesh(
+  new THREE.SphereGeometry(compactViewport ? 0.68 : 0.82, 32, 32),
   new THREE.MeshBasicMaterial({
-    color: 0x1f3f67,
+    color: 0xffd26c,
+  }),
+);
+const sunAura = createGlowSphere(compactViewport ? 1.3 : 1.65, 0xffb347, 0.06, 28);
+const sunOuterAura = createGlowSphere(compactViewport ? 1.9 : 2.35, 0xff9f43, 0.025, 24);
+sunGroup.add(sunOuterAura);
+sunGroup.add(sunAura);
+sunGroup.add(sun);
+sunGroup.position.set(compactViewport ? 3.8 : 5.1, compactViewport ? 1.75 : 2.35, compactViewport ? -10.5 : -13.2);
+scene.add(sunGroup);
+
+const planets = [
+  createPlanet({
+    radius: compactViewport ? 0.44 : 0.56,
+    color: 0x385ea7,
+    emissive: 0x173e7e,
+    position: [compactViewport ? 2.8 : 3.35, compactViewport ? 0.55 : 0.82, compactViewport ? -7.6 : -8.8],
+    glowColor: 0x7fdcff,
+    glowOpacity: 0.09,
+  }),
+  createPlanet({
+    radius: compactViewport ? 0.54 : 0.68,
+    color: 0x233e6d,
+    emissive: 0x132c58,
+    position: [compactViewport ? -3.9 : -5.1, compactViewport ? 1.1 : 1.35, compactViewport ? -11.8 : -13.8],
+    glowColor: 0x9fa8ff,
+    glowOpacity: 0.07,
+    ring: {
+      radiusScale: 1.7,
+      tube: compactViewport ? 0.014 : 0.018,
+      color: 0x7fdcff,
+      opacity: 0.18,
+      rotation: [1.24, 0.2, 0.32],
+      scale: [1.26, 0.42, 1],
+    },
+  }),
+  createPlanet({
+    radius: compactViewport ? 0.22 : 0.28,
+    color: 0x6b79ff,
+    emissive: 0x3d4eff,
+    position: [compactViewport ? -0.9 : -1.2, compactViewport ? 2.45 : 3.1, compactViewport ? -15 : -18],
+    glowColor: 0xaeb8ff,
+    glowOpacity: 0.06,
+  }),
+  createPlanet({
+    radius: compactViewport ? 0.18 : 0.24,
+    color: 0x314f88,
+    emissive: 0x183261,
+    position: [compactViewport ? 0.8 : 1.2, compactViewport ? 1.65 : 2.15, compactViewport ? -12.5 : -15.5],
+    glowColor: 0x7be5ff,
+    glowOpacity: 0.05,
+  }),
+];
+planets.forEach((entry) => scene.add(entry.group));
+
+const starfieldCount = prefersReducedMotion ? 280 : compactViewport ? 480 : 840;
+const starfieldGeometry = new THREE.BufferGeometry();
+const starPositions = new Float32Array(starfieldCount * 3);
+for (let i = 0; i < starfieldCount; i += 1) {
+  starPositions[i * 3] = (Math.random() - 0.5) * 26;
+  starPositions[i * 3 + 1] = (Math.random() - 0.5) * 18;
+  starPositions[i * 3 + 2] = -4 - Math.random() * 26;
+}
+starfieldGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+const starfield = new THREE.Points(
+  starfieldGeometry,
+  new THREE.PointsMaterial({
+    color: 0x5667cc,
+    size: compactViewport ? 0.02 : 0.024,
     transparent: true,
-    opacity: prefersReducedMotion ? 0.035 : 0.06,
+    opacity: 0.28,
     depthWrite: false,
   }),
 );
-galaxyBelt.rotation.x = 1.26;
-galaxyBelt.rotation.y = -0.22;
+scene.add(starfield);
 
-galaxyGroup.add(galaxyDustLayer);
-galaxyGroup.add(galaxyMainLayer);
-galaxyGroup.add(galaxyClusterLayer);
-galaxyGroup.add(galaxyBelt);
+scene.add(new THREE.AmbientLight(0xffffff, 0.32));
 
-// ── Floating Particles ────────────────────────────────────────
-const particleCount = prefersReducedMotion ? 360 : compactViewport ? 580 : 860;
-const pGeo = new THREE.BufferGeometry();
-const pPositions = new Float32Array(particleCount * 3);
-for (let i = 0; i < particleCount * 3; i++) {
-  pPositions[i] = (Math.random() - 0.5) * 20;
-}
-pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
-const pMat = new THREE.PointsMaterial({ color: 0x7b2fff, size: 0.03, transparent: true, opacity: 0.55 });
-const particles = new THREE.Points(pGeo, pMat);
-scene.add(particles);
+const keyLight = new THREE.PointLight(0x7fe2ff, 3.6, 22);
+keyLight.position.set(3.8, 2.2, 3.8);
+scene.add(keyLight);
 
-// ── Lighting ──────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+const fillLight = new THREE.PointLight(0x7a72ff, 2.2, 22);
+fillLight.position.set(-4.5, 0.2, 2.8);
+scene.add(fillLight);
 
-const light1 = new THREE.PointLight(0x7b2fff, 5, 15);
-light1.position.set(3, 3, 3);
-scene.add(light1);
+const sunLight = new THREE.PointLight(0xffc76a, 4.2, 40);
+sunLight.position.copy(sunGroup.position);
+scene.add(sunLight);
 
-const light2 = new THREE.PointLight(0x00d4ff, 4, 15);
-light2.position.set(-3, -2, 2);
-scene.add(light2);
-
-const light3 = new THREE.PointLight(0xff4488, 2, 10);
-light3.position.set(0, -4, -2);
-scene.add(light3);
-
-// ── Mouse ─────────────────────────────────────────────────────
-const mouse  = { x: 0, y: 0 };
+const mouse = { x: 0, y: 0 };
 const smooth = { x: 0, y: 0 };
+
 window.addEventListener('mousemove', (e) => {
-  mouse.x =  (e.clientX / window.innerWidth  - 0.5) * 2;
+  mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
   mouse.y = -(e.clientY / window.innerHeight - 0.5) * 2;
 });
 
-// ── Scroll ────────────────────────────────────────────────────
-const blobTarget  = { x: 2.2, y: 0 };
-const blobCurrent = { x: 2.2, y: 0 };
-
-window.addEventListener('scroll', () => {
-  if (isDragging) return;
-  const scrollFraction = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-  blobTarget.x = 2.2 - scrollFraction * 4.4;
-});
-
-// ── Drag ──────────────────────────────────────────────────────
-const raycaster  = new THREE.Raycaster();
-const dragPlane  = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-const dragPoint  = new THREE.Vector3();
-const pointerVec = new THREE.Vector2();
-
-let isDragging   = false;
-let dragOffsetX  = 0;
-let dragOffsetY  = 0;
-
-// Spring physics for snap-back
-const spring = { vx: 0, vy: 0, stiffness: 0.12, damping: 0.72 };
-
-function getScrollRestX() {
-  const scrollFraction = window.scrollY / (document.body.scrollHeight - window.innerHeight || 1);
-  return 2.2 - scrollFraction * 4.4;
-}
-
-canvas.addEventListener('mousedown', (e) => {
-  pointerVec.x =  (e.clientX / window.innerWidth)  * 2 - 1;
-  pointerVec.y = -(e.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(pointerVec, camera);
-  const hits = raycaster.intersectObject(blob);
-  if (hits.length > 0) {
-    isDragging  = true;
-    spring.vx   = 0;
-    spring.vy   = 0;
-    raycaster.ray.intersectPlane(dragPlane, dragPoint);
-    dragOffsetX = blobCurrent.x - dragPoint.x;
-    dragOffsetY = blobCurrent.y - dragPoint.y;
-    canvas.style.cursor = 'grabbing';
-  }
-});
-
-window.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
-  pointerVec.x =  (e.clientX / window.innerWidth)  * 2 - 1;
-  pointerVec.y = -(e.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(pointerVec, camera);
-  raycaster.ray.intersectPlane(dragPlane, dragPoint);
-  blobCurrent.x = dragPoint.x + dragOffsetX;
-  blobCurrent.y = dragPoint.y + dragOffsetY;
-});
-
-window.addEventListener('mouseup', () => {
-  if (isDragging) {
-    isDragging = false;
-    canvas.style.cursor = 'grab';
-  }
-});
-
-canvas.addEventListener('mouseover', () => { if (!isDragging) canvas.style.cursor = 'grab'; });
-canvas.addEventListener('mouseleave', () => { canvas.style.cursor = 'default'; });
-
-// ── Noise ─────────────────────────────────────────────────────
-function snoise(x, y, z) {
-  return Math.sin(x * 1.2 + y * 0.9) *
-         Math.cos(z * 1.1 + y * 0.8) *
-         Math.sin(z * 0.7 + x * 1.3);
-}
-
-// ── Resize ────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// ── Animate ───────────────────────────────────────────────────
 const clock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
   const t = clock.getElapsedTime();
 
-  // Morph vertices
-  for (let i = 0; i < posAttr.count; i++) {
-    const ox = originalPositions[i * 3];
-    const oy = originalPositions[i * 3 + 1];
-    const oz = originalPositions[i * 3 + 2];
-    const n  = snoise(ox + t * 0.4, oy + t * 0.35, oz + t * 0.3);
-    const d  = 1 + 0.28 * n;
-    posAttr.setXYZ(i, ox * d, oy * d, oz * d);
-  }
-  posAttr.needsUpdate = true;
-  geometry.computeVertexNormals();
+  smooth.x += (mouse.x - smooth.x) * 0.035;
+  smooth.y += (mouse.y - smooth.y) * 0.035;
 
-  // Smooth mouse
-  smooth.x += (mouse.x - smooth.x) * 0.04;
-  smooth.y += (mouse.y - smooth.y) * 0.04;
+  sunGroup.position.x = (compactViewport ? 3.8 : 5.1) + smooth.x * 0.38;
+  sunGroup.position.y = (compactViewport ? 1.75 : 2.35) + smooth.y * 0.18;
+  sunAura.scale.setScalar(1 + Math.sin(t * 0.9) * 0.06);
+  sunOuterAura.scale.setScalar(1 + Math.cos(t * 0.6) * 0.08);
+  sunLight.position.copy(sunGroup.position);
+  sunLight.intensity = 4 + Math.sin(t * 0.85) * 0.24;
 
-  // Drag spring snap-back / scroll glide
-  if (!isDragging) {
-    const restX = getScrollRestX();
-    const restY = 0;
-    // Spring force toward rest position
-    spring.vx += (restX - blobCurrent.x) * spring.stiffness;
-    spring.vy += (restY - blobCurrent.y) * spring.stiffness;
-    // Damping
-    spring.vx *= spring.damping;
-    spring.vy *= spring.damping;
-    blobCurrent.x += spring.vx;
-    blobCurrent.y += spring.vy;
-  }
-  blob.position.x     = blobCurrent.x;
-  blob.position.y     = blobCurrent.y;
-  wireBlob.position.x = blobCurrent.x;
-  wireBlob.position.y = blobCurrent.y;
-  orbitGroup.position.x = blobCurrent.x;
-  orbitGroup.position.y = blobCurrent.y;
-
-  blob.rotation.x = t * 0.15 + smooth.y * 0.5;
-  blob.rotation.y = t * 0.20 + smooth.x * 0.5;
-  wireBlob.rotation.copy(blob.rotation);
-
-  orbitRings.forEach(({ mesh, speed, baseX, baseY }, index) => {
-    mesh.rotation.x = baseX + Math.sin(t * 0.22 + index) * 0.035;
-    mesh.rotation.y = baseY + Math.cos(t * 0.18 + index * 0.7) * 0.045;
-    mesh.rotation.z = t * speed * 18;
+  planets.forEach((entry, index) => {
+    const drift = t * (0.08 + index * 0.018) + index * 1.4;
+    entry.group.position.x = entry.basePosition.x + Math.cos(drift) * 0.12;
+    entry.group.position.y = entry.basePosition.y + Math.sin(drift) * 0.16;
+    entry.group.rotation.y += 0.0018 + index * 0.0004;
+    entry.planet.rotation.y += 0.0014 + index * 0.00035;
+    entry.atmosphere.material.opacity =
+      (index === 0 ? 0.09 : index === 1 ? 0.07 : 0.055) +
+      Math.sin(drift * 1.4) * 0.01;
+    if (entry.ring) {
+      entry.ring.rotation.z += 0.0016;
+    }
   });
 
-  const orbitDriftX = smooth.x * 0.12;
-  const orbitDriftY = smooth.y * 0.08;
-  orbiter1.position.set(
-    Math.cos(t * 0.72) * 2.5 + orbitDriftX,
-    Math.sin(t * 0.72) * 0.72 + Math.sin(t * 0.24) * 0.18 + orbitDriftY,
-    Math.sin(t * 0.72) * 1.12,
-  );
-  orbiter2.position.set(
-    Math.cos(-t * 0.46 + 1.15) * 3.18 - orbitDriftX * 0.7,
-    Math.sin(-t * 0.46 + 1.15) * 1.06 - Math.cos(t * 0.2) * 0.14,
-    Math.cos(t * 0.46 + 0.55) * 0.86,
-  );
-  orbiter1.material.opacity = 0.72 + Math.sin(t * 1.4) * 0.14;
-  orbiter2.material.opacity = 0.58 + Math.cos(t * 1.1) * 0.12;
+  galaxyGroup.position.x = -0.3 + smooth.x * 0.22;
+  galaxyGroup.position.y = 0.4 + smooth.y * 0.14;
+  galaxyGroup.rotation.z = 0.16 + t * (prefersReducedMotion ? 0.0016 : 0.0032);
+  galaxyMain.rotation.z = t * 0.008;
+  galaxyDust.rotation.z = -t * 0.004;
+  galaxyDust.rotation.y = Math.sin(t * 0.08) * 0.04;
 
-  distantPlanet.position.y = 2.25 + Math.sin(t * 0.08) * 0.12;
-  distantPlanet.position.x = -4.8 + Math.cos(t * 0.06) * 0.16;
-  distantPlanet.material.opacity = 0.12 + Math.sin(t * 0.22) * 0.025;
+  starfield.rotation.y = t * 0.006;
+  starfield.rotation.x = t * 0.0025;
 
-  satellites.forEach((satellite, index) => {
-    const orbitTime = t * satellite.speed + satellite.phase;
-    const shimmer = 0.5 + 0.5 * Math.sin(t * 1.4 + satellite.shimmerOffset);
-    const beaconPulse = 0.52 + 0.48 * Math.sin(t * (2 + index * 0.28) + satellite.phase);
+  camera.position.x = smooth.x * 0.22;
+  camera.position.y = 0.28 + smooth.y * 0.14;
+  camera.lookAt(smooth.x * 0.32, smooth.y * 0.12, -11.5);
 
-    satellite.group.position.set(
-      satellite.centerX + Math.cos(orbitTime) * satellite.radiusX,
-      satellite.centerY + Math.sin(orbitTime * 1.08) * satellite.radiusY,
-      satellite.z,
-    );
-    satellite.group.rotation.z = Math.sin(orbitTime) * 0.22;
-    satellite.group.rotation.y = orbitTime * satellite.rollSpeed;
-    satellite.group.rotation.x = Math.cos(orbitTime * 0.8) * 0.08;
-
-    satellite.glow.material.opacity = 0.13 + shimmer * 0.12;
-    satellite.beacon.material.opacity = 0.42 + beaconPulse * 0.52;
-    satellite.bodyMaterial.emissiveIntensity = 0.46 + shimmer * 0.22;
-    satellite.panelMaterial.emissiveIntensity = 0.58 + shimmer * 0.38;
-    satellite.dishMaterial.emissiveIntensity = 0.38 + shimmer * 0.24;
-    satellite.rimMaterial.opacity = 0.18 + shimmer * 0.18;
-  });
-
-  galaxyGroup.position.x = -0.2 + smooth.x * (compactViewport ? 0.08 : 0.16);
-  galaxyGroup.position.y = 0.22 + smooth.y * (compactViewport ? 0.05 : 0.12);
-  galaxyGroup.rotation.x = -0.28 + smooth.y * 0.04;
-  galaxyGroup.rotation.z = 0.24 + t * (prefersReducedMotion ? 0.0025 : 0.0075);
-  galaxyMainLayer.rotation.z = t * 0.018;
-  galaxyDustLayer.rotation.z = -t * 0.009;
-  galaxyDustLayer.rotation.y = Math.sin(t * 0.08) * 0.06;
-  galaxyClusterLayer.rotation.z = t * 0.014 + 0.45;
-  galaxyClusterLayer.rotation.x = Math.sin(t * 0.12) * 0.04;
-  galaxyBelt.rotation.z = t * 0.02;
-  galaxyBelt.material.opacity =
-    (prefersReducedMotion ? 0.03 : 0.055) + Math.sin(t * 0.24) * 0.01;
-
-  // Hue-shift lights
-  const hue = (t * 0.05) % 1;
-  blobMaterial.emissive.setHSL(hue, 0.8, 0.12);
-  light1.color.setHSL(hue, 1, 0.5);
-  light2.color.setHSL((hue + 0.33) % 1, 1, 0.5);
-
-  particles.rotation.y = t * 0.02;
-  particles.rotation.x = t * 0.01;
+  keyLight.position.x = 3.8 + smooth.x * 0.36;
+  keyLight.position.y = 2.2 + smooth.y * 0.22;
+  fillLight.position.x = -4.5 - smooth.x * 0.28;
+  fillLight.position.y = 0.2 - smooth.y * 0.16;
 
   renderer.render(scene, camera);
 }

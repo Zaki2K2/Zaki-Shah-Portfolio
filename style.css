@@ -220,44 +220,7 @@ body {
   display: inline-block;
   cursor: default;
   position: relative;
-  will-change: transform;
-  /* JS handles transform; CSS only handles color/glow transitions */
-  transition:
-    color 0.4s ease,
-    text-shadow 0.4s ease;
-}
-
-/* Neon glow ripple — triggered by JS adding .glow class per letter */
-.letter.glow {
-  text-shadow:
-    0 0 10px var(--accent2),
-    0 0 30px var(--accent1),
-    0 0 60px var(--accent2),
-    0 0 100px var(--accent1);
-  animation: letterPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-.gradient-word .letter.glow {
-  text-shadow:
-    0 0 10px var(--accent1),
-    0 0 30px var(--accent2),
-    0 0 60px var(--accent1);
-}
-
-@keyframes letterPop {
-  0% {
-    transform: translate3d(var(--lx, 0px), var(--ly, 0px), 0) scale(1);
-  }
-  40% {
-    transform: translate3d(var(--lx, 0px), calc(var(--ly, 0px) - 14px), 0)
-      scale(1.25) rotate(-4deg);
-  }
-  70% {
-    transform: translate3d(var(--lx, 0px), calc(var(--ly, 0px) + 5px), 0)
-      scale(0.95) rotate(2deg);
-  }
-  100% {
-    transform: translate3d(var(--lx, 0px), var(--ly, 0px), 0) scale(1);
-  }
+  transition: color 0.4s ease;
 }
 
 .role {
@@ -1016,14 +979,31 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 10px 30px rgba(123, 47, 255, 0.4);
 }
-.form-success {
+.form-btn:disabled {
+  opacity: 0.78;
+  transform: none;
+  box-shadow: none;
+}
+.form-note {
+  color: rgba(214, 223, 246, 0.68);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  text-align: center;
+}
+.form-status {
   display: none;
-  color: var(--accent2);
+  min-height: 1.4rem;
   font-size: 0.88rem;
   text-align: center;
 }
-.form-success.show {
+.form-status.show {
   display: block;
+}
+.form-status--success {
+  color: var(--accent2);
+}
+.form-status--error {
+  color: #ff9aa8;
 }
 
 /* ── Footer ── */
