@@ -3,1129 +3,1106 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Syed Zaki Ahmad</title>
+    <meta
+      name="description"
+      content="Syed Zaki Ahmad is a Full Stack Developer building AI-driven products, automation systems, SaaS dashboards, and backend-connected digital platforms."
+    />
+    <title>Syed Zaki Ahmad | Full Stack Developer | AI-Driven Products</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%2304050e'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='Segoe UI, Arial, sans-serif' font-size='28' font-weight='700' fill='%2300d4ff'%3ESZ%3C/text%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23050711'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' dominant-baseline='middle' font-family='Georgia, serif' font-size='28' font-weight='700' fill='%237de2ff'%3ESZ%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@600;700&display=swap"
+      rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body class="preloading">
-    <!-- Preloader -->
-    <div class="preloader" id="preloader">
-      <canvas
-        class="preloader__canvas"
-        id="preloaderCanvas"
-        aria-hidden="true"
-      ></canvas>
-      <div class="preloader__vignette" aria-hidden="true"></div>
-      <div class="preloader__edge-glow" aria-hidden="true"></div>
-      <div class="preloader__core" id="preloaderCore" aria-hidden="true">
-        <span class="preloader__core-ring preloader__core-ring--outer"></span>
-        <span class="preloader__core-ring preloader__core-ring--mid"></span>
-        <span class="preloader__core-ring preloader__core-ring--inner"></span>
-        <span class="preloader__core-point"></span>
+  <body class="is-preloading">
+    <div class="preloader" id="preloader" aria-hidden="true">
+      <canvas class="preloader__canvas" id="preloaderCanvas"></canvas>
+      <div class="preloader__noise"></div>
+      <div class="preloader__core" id="preloaderCore">
+        <span class="preloader__ring preloader__ring--outer"></span>
+        <span class="preloader__ring preloader__ring--mid"></span>
+        <span class="preloader__ring preloader__ring--inner"></span>
+        <span class="preloader__pulse"></span>
       </div>
-      <div class="preloader__hud">
-        <div class="preloader__constellation" aria-hidden="true">
-          <span class="preloader__axis preloader__axis--horizontal"></span>
-          <span class="preloader__axis preloader__axis--vertical"></span>
-          <span class="preloader__orbit preloader__orbit--outer"></span>
-          <span class="preloader__orbit preloader__orbit--mid"></span>
-          <span class="preloader__orbit preloader__orbit--inner"></span>
-          <span class="preloader__anchor preloader__anchor--north"></span>
-          <span class="preloader__anchor preloader__anchor--east"></span>
-          <span class="preloader__anchor preloader__anchor--south"></span>
-          <span class="preloader__anchor preloader__anchor--west"></span>
-        </div>
-        <div class="preloader__eyebrow-wrap">
-          <span class="preloader__eyebrow-line" aria-hidden="true"></span>
-          <p class="preloader__eyebrow">Universe Initializing</p>
-          <span class="preloader__eyebrow-line" aria-hidden="true"></span>
-        </div>
-        <div class="preloader__signature-wrap">
-          <div class="preloader__signature">
-            <span class="preloader__signature-line">Syed Zaki</span>
-            <span class="preloader__signature-line">Ahmad</span>
-          </div>
-        </div>
-        <div class="preloader__telemetry">
-          <div class="preloader__phase-block">
-            <span class="preloader__phase-label">Formation State</span>
-            <p class="preloader__phase" id="preloaderPhase">
-              Primordial Darkness
-            </p>
-          </div>
-          <div class="preloader__status" aria-hidden="true">
-            <span class="preloader__status-ring">
-              <span class="preloader__status-core"></span>
-            </span>
-            <span class="preloader__progress" id="preloaderProgress">00%</span>
-          </div>
+      <div class="preloader__content">
+        <p class="preloader__eyebrow">Syed Zaki Ahmad</p>
+        <h1 class="preloader__title">A digital universe is forming.</h1>
+        <p class="preloader__phase" id="preloaderPhase">
+          Initializing Universe
+        </p>
+        <div class="preloader__progress-shell" aria-hidden="true">
+          <span class="preloader__progress-bar">
+            <span class="preloader__progress-fill" id="preloaderBar"></span>
+          </span>
+          <span class="preloader__progress-text" id="preloaderProgress"
+            >00%</span
+          >
         </div>
       </div>
       <button
         type="button"
         class="preloader__skip"
         id="preloaderSkip"
-        aria-label="Skip intro animation"
+        aria-label="Skip intro"
       >
         Skip Intro
       </button>
     </div>
 
-    <!-- Custom cursor -->
-    <div class="cursor-dot"></div>
-    <div class="cursor-ring"></div>
+    <div class="cursor-dot" aria-hidden="true"></div>
+    <div class="cursor-ring" aria-hidden="true"></div>
+    <canvas id="bg" aria-hidden="true"></canvas>
 
-    <!-- Floating orbs -->
-    <div class="orb orb1"></div>
-    <div class="orb orb2"></div>
-    <div class="orb orb3"></div>
+    <!-- Only use royalty-free, CC0, self-generated, or properly licensed audio here. Do not use copyrighted music. -->
+    <audio id="ambientAudio" loop preload="none" data-prefer-format="wav"></audio>
 
-    <canvas id="bg"></canvas>
+    <header class="site-header">
+      <nav class="navbar" id="navbar" aria-label="Primary navigation">
+        <a href="#home" class="brand" aria-label="Go to homepage section">
+          <span class="brand__mark">SZ</span>
+          <span class="brand__text">Syed Zaki Ahmad</span>
+        </a>
 
-    <!-- ── Navbar ── -->
-    <nav class="navbar" id="navbar">
-      <div class="nav-logo">SZ</div>
-      <ul class="nav-links">
-        <li><a href="#hero">Home</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#work">Work</a></li>
-        <li><a href="#main-work">Main Work</a></li>
-        <li><a href="#skills">Skills</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-      <a href="#contact" class="nav-cta">Hire Me</a>
-      <button class="hamburger" id="hamburger" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
-    </nav>
+        <button
+          class="nav-toggle"
+          id="navToggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="mobileMenu"
+          aria-label="Toggle navigation menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
 
-    <!-- Mobile menu -->
-    <div class="mobile-menu" id="mobileMenu">
-      <ul>
-        <li><a href="#hero" class="mob-link">Home</a></li>
-        <li><a href="#about" class="mob-link">About</a></li>
-        <li><a href="#work" class="mob-link">Work</a></li>
-        <li><a href="#main-work" class="mob-link">Main Work</a></li>
-        <li><a href="#skills" class="mob-link">Skills</a></li>
-        <li><a href="#contact" class="mob-link">Contact</a></li>
-        <li><a href="#contact" class="mob-link mob-cta">Hire Me</a></li>
-      </ul>
-    </div>
+        <div class="nav-panel" id="mobileMenu">
+          <ul class="nav-links">
+            <li><a href="#home" data-nav-link>Home</a></li>
+            <li><a href="#about" data-nav-link>About</a></li>
+            <li><a href="#ai" data-nav-link>AI</a></li>
+            <li><a href="#work" data-nav-link>Work</a></li>
+            <li><a href="#skills" data-nav-link>Skills</a></li>
+            <li><a href="#contact" data-nav-link>Contact</a></li>
+          </ul>
+          <div class="audio-widget nav-audio" id="audioWidget" hidden>
+            <div class="audio-widget__controls">
+              <button
+                type="button"
+                class="sound-toggle nav-audio__toggle"
+                id="soundToggle"
+                aria-label="Enable background music"
+                aria-pressed="false"
+              >
+                <span class="sound-toggle__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path
+                      fill="currentColor"
+                      d="M14.5 4.5a1 1 0 0 1 1.7.71v13.58a1 1 0 0 1-1.7.71l-4.3-4.29H7a2 2 0 0 1-2-2V10.3a2 2 0 0 1 2-2h3.2l4.3-4.3Z"
+                    />
+                  </svg>
+                </span>
+                <span class="sound-toggle__bars" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </span>
+                <span class="sound-toggle__meta">
+                  <span class="sound-toggle__label">Enable Music</span>
+                  <span class="sound-toggle__mode" id="soundModeLabel">Piano</span>
+                </span>
+              </button>
 
-    <!-- ── Hero ── -->
-    <section class="hero" id="hero">
-      <div class="hero-grid">
-        <div class="hero-content">
-          <p class="subtitle">Full Stack Developer / Islamabad, Pakistan</p>
-          <h1 class="title">
-            <span class="word" id="word1">Syed</span><br />
-            <span class="word" id="word2">Zaki</span><br />
-            <span class="word gradient-word" id="word3">Ahmad</span>
-          </h1>
-          <p class="role">
-            <span id="typewriter"></span><span class="cursor-blink">|</span>
-          </p>
-          <p class="hero-lead">
-            full stack developer building polished web interfaces, API-connected
-            platforms, and scalable product flows.
-          </p>
-          <div class="hero-btns">
-            <a href="#main-work" class="cta">View Featured Work</a>
-            <a
-              href="Syed Zaki Ahmad CV26 (1).pdf"
-              class="cta cta-ghost"
-              download="Syed Zaki Ahmad Resume.pdf"
-              >Download Resume</a
+              <button
+                type="button"
+                class="sound-menu-toggle nav-audio__menu-toggle"
+                id="soundMenuToggle"
+                aria-label="Choose music track"
+                aria-expanded="false"
+                aria-controls="audioMenu"
+              >
+                <span></span>
+                <span></span>
+                <span></span>
+              </button>
+            </div>
+
+            <div class="audio-menu nav-audio__panel" id="audioMenu" aria-label="Background music tracks">
+              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="piano" aria-pressed="false">
+                <span
+                  class="audio-mode__icon audio-mode__icon--piano"
+                  aria-hidden="true"
+                ></span>
+                <span>Piano</span>
+              </button>
+              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="violin" aria-pressed="false">
+                <span
+                  class="audio-mode__icon audio-mode__icon--violin"
+                  aria-hidden="true"
+                ></span>
+                <span>Violin</span>
+              </button>
+              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="guitar" aria-pressed="false">
+                <span
+                  class="audio-mode__icon audio-mode__icon--guitar"
+                  aria-hidden="true"
+                ></span>
+                <span>Guitar</span>
+              </button>
+              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="jazz" aria-pressed="false">
+                <span
+                  class="audio-mode__icon audio-mode__icon--jazz"
+                  aria-hidden="true"
+                ></span>
+                <span>Jazz</span>
+              </button>
+              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="classical" aria-pressed="false">
+                <span
+                  class="audio-mode__icon audio-mode__icon--classical"
+                  aria-hidden="true"
+                ></span>
+                <span>Classical</span>
+              </button>
+              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="pop" aria-pressed="false">
+                <span
+                  class="audio-mode__icon audio-mode__icon--pop"
+                  aria-hidden="true"
+                ></span>
+                <span>Pop</span>
+              </button>
+            </div>
+          </div>
+          <a href="#contact" class="nav-cta magnetic" data-nav-link
+            >Let&rsquo;s Build</a
+          >
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero scene-section" id="home" data-scene="hero">
+        <div class="container hero__grid">
+          <div class="hero__content" data-reveal>
+            <p class="hero__eyebrow">
+              Syed Zaki Ahmad | Full Stack Developer | AI-Driven Web Products |
+              Automation &amp; Agentic Systems
+            </p>
+            <h1 class="hero__title">
+              Building Full-Stack Products for the AI-Driven Web.
+            </h1>
+            <p class="hero__lead">
+              I design and develop polished, backend-connected digital products
+              from SaaS dashboards and automation systems to AI-ready web
+              platforms.
+            </p>
+
+            <div class="hero__badge-row" aria-label="Key positioning">
+              <span>Full Stack</span>
+              <span>AI &amp; Automation</span>
+              <span>SaaS Systems</span>
+            </div>
+
+            <div class="hero__actions">
+              <a href="#work" class="button button--primary magnetic"
+                >View Work</a
+              >
+              <a
+                href="Syed Zaki Ahmad CV26 (1).pdf"
+                class="button button--ghost magnetic"
+                download="Syed Zaki Ahmad Resume.pdf"
+              >
+                Download Resume
+              </a>
+              <a href="#contact" class="hero__text-link">Let&rsquo;s Build</a>
+            </div>
+
+            <div class="hero-proof" data-reveal>
+              <article class="hero-proof__item">
+                <strong class="count-up" data-count="2">0</strong>
+                <span>Years Experience</span>
+              </article>
+              <article class="hero-proof__item">
+                <strong class="count-up" data-count="10">0</strong>
+                <span>Projects</span>
+              </article>
+              <article class="hero-proof__item">
+                <strong>Full Stack</strong>
+                <span>Delivery</span>
+              </article>
+              <article class="hero-proof__item">
+                <strong>AI</strong>
+                <span>Focused Growth</span>
+              </article>
+            </div>
+          </div>
+
+          <aside class="hero__deck" id="heroDeck" data-reveal>
+            <div class="deck-panel">
+              <div class="deck-panel__top">
+                <span class="deck-panel__label">Command Deck</span>
+                <span class="deck-panel__status">Live Direction</span>
+              </div>
+              <h2>
+                Product systems engineered for modern web, automation, and
+                AI-ready growth.
+              </h2>
+              <div class="deck-panel__grid">
+                <article>
+                  <span>01</span>
+                  <p>AI-ready products</p>
+                </article>
+                <article>
+                  <span>02</span>
+                  <p>Automation workflows</p>
+                </article>
+                <article>
+                  <span>03</span>
+                  <p>Backend-connected systems</p>
+                </article>
+                <article>
+                  <span>04</span>
+                  <p>Cloud-aware delivery</p>
+                </article>
+              </div>
+              <div class="deck-panel__signal" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section
+        class="section section--about scene-section"
+        id="about"
+        data-scene="about"
+      >
+        <div class="container">
+          <div class="section-heading section-heading--compact" data-reveal>
+            <p class="section-heading__label">About</p>
+            <h2>
+              Full-stack product engineering with sharper frontend execution and
+              system-aware delivery.
+            </h2>
+            <p>
+              I&rsquo;m Syed Zaki Ahmad, a Full Stack Developer based in
+              Islamabad, Pakistan. I build polished web interfaces,
+              backend-connected systems, automation workflows, SaaS dashboards,
+              and modern digital products.
+            </p>
+          </div>
+
+          <div class="about-grid">
+            <article class="about-panel" data-reveal>
+              <span class="about-panel__index">01</span>
+              <h3>Full Stack Engineering</h3>
+              <p>
+                Frontend, backend, APIs, databases, and deployment-aware product
+                development.
+              </p>
+            </article>
+            <article class="about-panel" data-reveal>
+              <span class="about-panel__index">02</span>
+              <h3>AI &amp; Automation Mindset</h3>
+              <p>
+                Exploring models, agentic AI, autopilots, and automation layers
+                for smarter products.
+              </p>
+            </article>
+            <article class="about-panel" data-reveal>
+              <span class="about-panel__index">03</span>
+              <h3>Product-First Delivery</h3>
+              <p>
+                Clean UI, scalable structure, and practical systems built around
+                real business problems.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="section section--ai scene-section"
+        id="ai"
+        data-scene="ai"
+      >
+        <div class="container">
+          <div class="section-heading section-heading--feature" data-reveal>
+            <p class="section-heading__label">
+              AI, Automation &amp; Future Systems
+            </p>
+            <h2>
+              I&rsquo;m building toward smarter products through AI-assisted
+              workflows and model-driven features.
+            </h2>
+            <p>
+              I&rsquo;m building toward smarter products: AI-assisted workflows,
+              model-driven features, and autopilot-style systems that reduce
+              manual work.
+            </p>
+          </div>
+
+          <div class="ai-grid">
+            <article class="ai-card" data-reveal>
+              <div class="ai-card__media">
+                <img
+                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80"
+                  alt="Dark code workspace representing agentic AI systems"
+                  loading="lazy"
+                />
+                <span class="ai-card__nodes" aria-hidden="true"></span>
+              </div>
+              <div class="ai-card__body">
+                <span class="ai-card__label">Agentic AI</span>
+                <h3>
+                  Autonomous workflows, assistants, and multi-step task
+                  execution.
+                </h3>
+                <p>
+                  Systems that can reason through connected product actions with
+                  stronger task flow awareness.
+                </p>
+              </div>
+            </article>
+
+            <article class="ai-card" data-reveal>
+              <div class="ai-card__media">
+                <img
+                  src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80"
+                  alt="Abstract automation interface for autopilot systems"
+                  loading="lazy"
+                />
+                <span class="ai-card__nodes" aria-hidden="true"></span>
+              </div>
+              <div class="ai-card__body">
+                <span class="ai-card__label">Autopilot Systems</span>
+                <h3>
+                  Interfaces that guide, automate, and accelerate business
+                  operations.
+                </h3>
+                <p>
+                  Workflow design that reduces repetitive manual work and keeps
+                  users moving faster.
+                </p>
+              </div>
+            </article>
+
+            <article class="ai-card" data-reveal>
+              <div class="ai-card__media">
+                <img
+                  src="https://images.unsplash.com/photo-1484417894907-623942c8ee29?auto=format&fit=crop&w=1200&q=80"
+                  alt="Modern workstation representing model integration work"
+                  loading="lazy"
+                />
+                <span class="ai-card__nodes" aria-hidden="true"></span>
+              </div>
+              <div class="ai-card__body">
+                <span class="ai-card__label">Model Work</span>
+                <h3>
+                  Prediction APIs, model integration, and intelligent product
+                  features.
+                </h3>
+                <p>
+                  Practical product features shaped around useful model outputs
+                  instead of novelty alone.
+                </p>
+              </div>
+            </article>
+
+            <article class="ai-card" data-reveal>
+              <div class="ai-card__media">
+                <img
+                  src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80"
+                  alt="Futuristic network scene for AI-ready product systems"
+                  loading="lazy"
+                />
+                <span class="ai-card__nodes" aria-hidden="true"></span>
+              </div>
+              <div class="ai-card__body">
+                <span class="ai-card__label">AI-Ready Products</span>
+                <h3>
+                  Full-stack systems prepared for LLMs, APIs, and automation
+                  layers.
+                </h3>
+                <p>
+                  Architecture decisions made with future intelligence,
+                  orchestration, and scale in mind.
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="section section--work scene-section"
+        id="work"
+        data-scene="work"
+      >
+        <div class="container">
+          <div class="section-heading section-heading--split" data-reveal>
+            <div>
+              <p class="section-heading__label">Featured Work</p>
+              <h2>
+                Proof across SaaS products, backend systems, AI tooling, and
+                polished digital builds.
+              </h2>
+            </div>
+            <p class="section-heading__aside">
+              Featured work gets scale. Everything else stays compact,
+              filterable, and easy to scan.
+            </p>
+          </div>
+
+          <div class="featured-work">
+            <article
+              class="project-feature project-feature--primary"
+              data-reveal
+              data-category="full-stack ai"
             >
-          </div>
-          <div class="hero-summary">
-            <p class="hero-summary__eyebrow">Full-stack capable</p>
-            <p class="hero-summary__text">
-              Angular, React, Node.js, ASP.NET Core, SQL, and AWS for polished
-              interfaces backed by connected product systems.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="scroll-hint">&#x2193; scroll</div>
-    </section>
-
-    <!-- ── About ── -->
-    <section id="about" class="section reveal">
-      <div class="section-shell">
-        <div class="section-head section-head--split">
-          <div>
-            <p class="section-label">About Me</p>
-            <h2 class="section-title">
-              Full stack web development led by frontend quality, structure, and
-              product clarity.
-            </h2>
-          </div>
-          <p class="section-intro">
-            I build modern web products with a mindset and practical awareness
-            of the connected systems behind them.
-          </p>
-        </div>
-        <div class="about-grid">
-          <div class="about-text">
-            <p class="about-bio">
-              I'm Syed Zaki Ahmad, a full stack web developer based in
-              Islamabad, Pakistan. My strongest value comes from building
-              polished interfaces, responsive layouts, and maintainable
-              component-driven web applications.
-            </p>
-            <p class="about-bio">
-              I enjoy taking web products from UI implementation into connected,
-              production-ready workflows using Angular, React, TypeScript,
-              Node.js, ASP.NET Core, SQL, and cloud-aware delivery practices.
-            </p>
-            <p class="about-support-line">
-              Frontend remains the strongest layer of my work, but I am equally
-              comfortable shaping APIs, integration paths, data models, and
-              scalable delivery decisions around it.
-            </p>
-            <div class="about-highlights">
-              <article class="about-highlight">
-                <h3>Frontend Precision</h3>
+              <div class="project-feature__media">
+                <img
+                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1400&q=80"
+                  alt="Dark dashboard workspace representing CustomerCore SaaS product"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-feature__body">
+                <div class="project-feature__meta">
+                  <span class="project-feature__type">Full Stack SaaS</span>
+                  <span
+                    class="project-feature__badge project-feature__badge--private"
+                    >Private Build</span
+                  >
+                </div>
+                <h3>CustomerCore / SaaS Product Experience</h3>
                 <p>
-                  Responsive UI implementation, reusable components, and
-                  polished product-facing screens.
+                  Business software experience across dashboards, workflows,
+                  documents, accounting, sales, expenses, and connected systems.
                 </p>
-              </article>
-              <article class="about-highlight">
-                <h3>System-Aware Delivery</h3>
+                <div class="project-feature__details">
+                  <span>Category: Full Stack</span>
+                  <span>Tech: Angular, Node.js, MongoDB, AWS</span>
+                </div>
+                <div class="tag-row">
+                  <span>Angular</span>
+                  <span>Node.js</span>
+                  <span>MongoDB</span>
+                  <span>AWS</span>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="project-feature project-feature--primary"
+              data-reveal
+              data-category="full-stack websites"
+            >
+              <div class="project-feature__media">
+                <img
+                  src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1400&q=80"
+                  alt="Modern engineering desk representing Perfumes App ecommerce platform"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-feature__body">
+                <div class="project-feature__meta">
+                  <span class="project-feature__type">E-Commerce Platform</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <h3>Perfumes App</h3>
                 <p>
-                  Practical full stack delivery with API-first architecture,
-                  backend-connected workflows, and dependable system thinking.
+                  A perfume store with storefront, cart, checkout, order flow,
+                  admin management, and product handling.
                 </p>
-              </article>
+                <div class="project-feature__details">
+                  <span>Category: Full Stack</span>
+                  <span>Tech: TypeScript, Next.js, MongoDB</span>
+                </div>
+                <div class="tag-row">
+                  <span>TypeScript</span>
+                  <span>Next.js</span>
+                  <span>MongoDB</span>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="project-feature project-feature--secondary"
+              data-reveal
+              data-category="tools ai"
+            >
+              <div class="project-feature__media">
+                <img
+                  src="https://images.unsplash.com/photo-1510511459019-5dda7724fd87?auto=format&fit=crop&w=1200&q=80"
+                  alt="Privacy tooling workspace representing WhatsApp Web Privacy Shield"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-feature__body">
+                <div class="project-feature__meta">
+                  <span class="project-feature__type"
+                    >Browser Extension / Privacy Tool</span
+                  >
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <h3>WhatsApp Web Privacy Shield</h3>
+                <p>
+                  Privacy-focused extension for visibility control, selected
+                  chat blur, and safer screen sharing.
+                </p>
+                <div class="tag-row">
+                  <span>JavaScript</span>
+                  <span>Browser APIs</span>
+                  <span>DOM</span>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="project-feature project-feature--secondary"
+              data-reveal
+              data-category="backend full-stack tools"
+            >
+              <div class="project-feature__media">
+                <img
+                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80"
+                  alt="Approval system dashboard representing Approval Layer V1"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-feature__body">
+                <div class="project-feature__meta">
+                  <span class="project-feature__type"
+                    >Approval Management System</span
+                  >
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <h3>Approval Layer V1</h3>
+                <p>
+                  Role-based approval flows for access control, traceability,
+                  and multi-level validation.
+                </p>
+                <div class="tag-row">
+                  <span>TypeScript</span>
+                  <span>Node.js</span>
+                  <span>Authorization</span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="project-listing-head" data-reveal>
+            <div>
+              <p class="section-heading__label">More Builds</p>
+              <h3>Compact product, website, backend, and automation work.</h3>
             </div>
-            <div class="about-tags">
-              <span>Angular</span><span>React</span><span>TypeScript</span>
-              <span>Node.js</span><span>ASP.NET Core</span><span>AWS</span>
+            <div
+              class="project-filters"
+              role="toolbar"
+              aria-label="Project filters"
+            >
+              <button
+                type="button"
+                class="filter-chip is-active"
+                data-filter="all"
+                aria-pressed="true"
+              >
+                All
+              </button>
+              <button
+                type="button"
+                class="filter-chip"
+                data-filter="full-stack"
+                aria-pressed="false"
+              >
+                Full Stack
+              </button>
+              <button
+                type="button"
+                class="filter-chip"
+                data-filter="ai"
+                aria-pressed="false"
+              >
+                AI / Automation
+              </button>
+              <button
+                type="button"
+                class="filter-chip"
+                data-filter="websites"
+                aria-pressed="false"
+              >
+                Websites
+              </button>
+              <button
+                type="button"
+                class="filter-chip"
+                data-filter="backend"
+                aria-pressed="false"
+              >
+                Backend
+              </button>
+              <button
+                type="button"
+                class="filter-chip"
+                data-filter="tools"
+                aria-pressed="false"
+              >
+                Tools
+              </button>
             </div>
           </div>
-          <div class="about-side">
-            <div class="about-card">
-              <p class="about-card__eyebrow">Working Snapshot</p>
-              <ul class="about-points">
-                <li>
-                  2+ years building polished web interfaces and product flows
-                </li>
-                <li>with practical backend, database, and cloud capability</li>
-                <li>
-                  Open to product teams building reliable, scalable web
-                  platforms
-                </li>
-              </ul>
-            </div>
-            <div class="about-stats">
-              <div class="stat-box">
-                <span class="stat-num" data-target="2">0</span>
-                <span class="stat-plus">+</span>
-                <p>Years Experience</p>
+
+          <div class="project-list" id="projectList">
+            <article
+              class="project-tile"
+              data-reveal
+              data-category="ai websites"
+            >
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80"
+                  alt="Automation-focused web project workspace for Autopilot New"
+                  loading="lazy"
+                />
               </div>
-              <div class="stat-box">
-                <span class="stat-num" data-target="5">0</span>
-                <span class="stat-plus">+</span>
-                <p>Key Projects</p>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>Autopilot New</h3>
+                  <span>AI / Automation Website</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <p>
+                  Automation-focused web project built around autopilot-style
+                  digital workflows and business growth.
+                </p>
+                <div class="tag-row">
+                  <span>HTML</span><span>CSS</span><span>JavaScript</span>
+                </div>
               </div>
-              <div class="stat-box">
-                <span class="stat-num" data-target="3">0</span>
-                <span class="stat-plus">+</span>
-                <p>Professional Roles</p>
+            </article>
+
+            <article class="project-tile" data-reveal data-category="websites">
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80"
+                  alt="Premium technology website placeholder for NovaCTO"
+                  loading="lazy"
+                />
               </div>
-              <div class="stat-box">
-                <span class="stat-num" data-target="1">0</span>
-                <span class="stat-plus">+</span>
-                <p>Fintech Product</p>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>NovaCTO</h3>
+                  <span>Premium Tech Website</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <p>
+                  High-end technology brand website with clean sections, strong
+                  CTAs, and modern digital presence.
+                </p>
+                <div class="tag-row">
+                  <span>HTML</span><span>CSS</span><span>JavaScript</span>
+                </div>
               </div>
-            </div>
+            </article>
+
+            <article class="project-tile" data-reveal data-category="websites">
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1497366412874-3415097a27e7?auto=format&fit=crop&w=1200&q=80"
+                  alt="Business website placeholder for TheOutsource"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>TheOutsource</h3>
+                  <span>Business Website</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <p>
+                  Professional outsourcing website designed to communicate
+                  services clearly and convert visitors into leads.
+                </p>
+                <div class="tag-row">
+                  <span>HTML</span><span>CSS</span><span>JavaScript</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-tile" data-reveal data-category="websites">
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80"
+                  alt="Marketing website placeholder for GoDigitalVantage"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>GoDigitalVantage</h3>
+                  <span>Marketing Website</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <p>
+                  Digital growth website with service sections, premium content
+                  structure, and business-focused CTAs.
+                </p>
+                <div class="tag-row">
+                  <span>HTML</span><span>CSS</span><span>JavaScript</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-tile" data-reveal data-category="websites">
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1516321165247-4aa89a48be28?auto=format&fit=crop&w=1200&q=80"
+                  alt="Startup accelerator website placeholder for NovaXccelerate"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>NovaXccelerate</h3>
+                  <span>Startup / Accelerator Website</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <p>
+                  Growth-focused brand website with clean layout, sharp
+                  positioning, and lead-generation flow.
+                </p>
+                <div class="tag-row">
+                  <span>HTML</span><span>CSS</span><span>JavaScript</span>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="project-tile"
+              data-reveal
+              data-category="backend ai"
+            >
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80"
+                  alt="Python automation coding setup for PrivateWork"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>PrivateWork</h3>
+                  <span>Python / Automation</span>
+                  <span
+                    class="project-feature__badge project-feature__badge--private"
+                    >Private Build</span
+                  >
+                </div>
+                <p>
+                  Private Python work focused on scripts, automation logic, and
+                  backend-style problem solving.
+                </p>
+                <div class="tag-row">
+                  <span>Python</span><span>Automation</span><span>Scripts</span>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="project-tile"
+              data-reveal
+              data-category="backend full-stack"
+            >
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=1200&q=80"
+                  alt="Backend starter system visual for Node Base"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>Node Base</h3>
+                  <span>Backend Starter System</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <p>
+                  Reusable Node.js backend base designed to speed up project
+                  setup with common backend structure.
+                </p>
+                <div class="tag-row">
+                  <span>TypeScript</span><span>Node.js</span
+                  ><span>Express</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-tile" data-reveal data-category="websites">
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=80"
+                  alt="Portfolio interface placeholder for Zaki Shah Portfolio"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>Zaki Shah Portfolio</h3>
+                  <span>Personal Portfolio</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <p>
+                  Portfolio experiment focused on dark visuals, frontend polish,
+                  and interactive presentation.
+                </p>
+                <div class="tag-row">
+                  <span>CSS</span><span>HTML</span><span>JavaScript</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-tile" data-reveal data-category="websites">
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1522199755839-a2bacb67c546?auto=format&fit=crop&w=1200&q=80"
+                  alt="Luxury product presentation interface for Perfumes"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>Perfumes</h3>
+                  <span>E-Commerce UI</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <p>
+                  Polished perfume brand interface focused on product
+                  presentation, clean visuals, and responsive design.
+                </p>
+                <div class="tag-row">
+                  <span>CSS</span><span>HTML</span><span>JavaScript</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-tile" data-reveal data-category="websites">
+              <div class="project-tile__media">
+                <img
+                  src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80"
+                  alt="Marketing website workspace for goDigitalVantage Final V6"
+                  loading="lazy"
+                />
+              </div>
+              <div class="project-tile__content">
+                <div class="project-tile__meta">
+                  <h3>goDigitalVantage Final V6</h3>
+                  <span>Marketing Website</span>
+                  <span class="project-feature__badge">Public Repo</span>
+                </div>
+                <p>
+                  Refined marketing website iteration with premium layout
+                  structure and business-oriented digital positioning.
+                </p>
+                <div class="tag-row">
+                  <span>HTML</span><span>CSS</span><span>JavaScript</span>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ── Work ── -->
-    <section id="approach" class="section reveal signature-section">
-      <div class="section-shell">
-        <div class="section-head section-head--split">
-          <div>
-            <p class="section-label">Signature</p>
-            <h2 class="section-title">
-              Building full web products with frontend precision and clean
-              structure.
+      <section
+        class="section section--skills scene-section"
+        id="skills"
+        data-scene="skills"
+      >
+        <div class="container">
+          <div class="section-heading section-heading--compact" data-reveal>
+            <p class="section-heading__label">Skills</p>
+            <h2>
+              Full-stack capability grouped for product engineering, AI
+              readiness, and modern delivery.
             </h2>
+            <p>Compact technical panels instead of noisy progress bars.</p>
           </div>
-          <p class="section-intro">
-            I care most about how web products feel in use, while keeping the
-            underlying implementation clear, connected, and maintainable.
-          </p>
-        </div>
-        <div class="signature-layout">
-          <article class="signature-panel">
-            <p class="signature-panel__eyebrow">How I Build</p>
-            <blockquote class="signature-panel__quote">
-              I build web products from the interface outward, making sure the
-              UI feels sharp while the connected system stays practical and
-              dependable.
-            </blockquote>
-            <div class="signature-panel__marks">
-              <span>Frontend First</span>
-              <span>Clean Structure</span>
-            </div>
-          </article>
-          <div class="signature-principles">
-            <article class="signature-principle">
-              <p class="signature-principle__label">01</p>
-              <h3>Reusable UI Systems</h3>
-              <p>
-                I prefer component structure that keeps screens consistent and
-                easier to scale.
-              </p>
-            </article>
-            <article class="signature-principle">
-              <p class="signature-principle__label">02</p>
-              <h3>Practical Full Stack Delivery</h3>
-              <p>
-                I stay comfortable with backend-connected flows, data handling,
-                and product-level implementation decisions.
-              </p>
-            </article>
-            <article class="signature-principle">
-              <p class="signature-principle__label">03</p>
-              <h3>Quality Without Noise</h3>
-              <p>
-                Motion, polish, and implementation detail should strengthen the
-                product, not distract from it.
-              </p>
-            </article>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <section id="work" class="section reveal">
-      <div class="section-shell">
-        <div class="section-head section-head--split">
-          <div>
-            <p class="section-label">Portfolio</p>
-            <h2 class="section-title">Selected Work</h2>
+          <div class="skills-grid">
+            <article class="skill-panel" data-reveal>
+              <p class="skill-panel__label">Frontend</p>
+              <div class="skill-pills">
+                <span>Angular</span>
+                <span>React</span>
+                <span>Next.js</span>
+                <span>TypeScript</span>
+                <span>JavaScript</span>
+                <span>HTML</span>
+                <span>CSS / SCSS</span>
+              </div>
+            </article>
+
+            <article class="skill-panel" data-reveal>
+              <p class="skill-panel__label">Backend</p>
+              <div class="skill-pills">
+                <span>Node.js</span>
+                <span>Express</span>
+                <span>ASP.NET Core</span>
+                <span>REST APIs</span>
+                <span>Authentication</span>
+                <span>Role-Based Access</span>
+              </div>
+            </article>
+
+            <article class="skill-panel" data-reveal>
+              <p class="skill-panel__label">Databases</p>
+              <div class="skill-pills">
+                <span>MongoDB</span>
+                <span>SQL</span>
+                <span>Mongoose</span>
+              </div>
+            </article>
+
+            <article class="skill-panel" data-reveal>
+              <p class="skill-panel__label">Cloud / DevOps</p>
+              <div class="skill-pills">
+                <span>AWS EC2</span>
+                <span>S3</span>
+                <span>Nginx</span>
+                <span>PM2</span>
+                <span>Bitbucket Pipelines</span>
+                <span>Deployment Workflows</span>
+              </div>
+            </article>
+
+            <article class="skill-panel skill-panel--wide" data-reveal>
+              <p class="skill-panel__label">AI / Automation</p>
+              <div class="skill-pills">
+                <span>Agentic AI Concepts</span>
+                <span>AI Workflows</span>
+                <span>Model Integration</span>
+                <span>Prediction APIs</span>
+                <span>Automation Systems</span>
+                <span>LLM-ready Product Flows</span>
+              </div>
+            </article>
           </div>
-          <p class="section-intro">
-            A concise proof layer showing product-facing UI work and connected
-            web application delivery.
-          </p>
         </div>
-        <div class="cards cards--three-up work-grid">
-          <div class="card card--case-study">
-            <div class="card-top">
-              <div class="card-num">01</div>
-              <div class="card-tag">Angular Product</div>
-            </div>
-            <h3>Portugal MLS</h3>
+      </section>
+
+      <section
+        class="section section--contact scene-section"
+        id="contact"
+        data-scene="contact"
+      >
+        <div class="container contact-grid">
+          <div class="section-heading section-heading--closing" data-reveal>
+            <p class="section-heading__label">Contact</p>
+            <h2>Let&rsquo;s Build Smart, Sharp, Future-Ready Products.</h2>
             <p>
-              Property-focused web interface built around responsive browsing
-              and clearer listing visibility.
+              Open to full-stack product work, automation-focused builds,
+              AI-ready systems, and serious collaboration around modern digital
+              products.
             </p>
-            <div class="case-study__details">
-              <span><strong>Focus</strong> Listing UX</span>
-              <span><strong>Role</strong> Frontend implementation</span>
+            <div class="contact-actions">
+              <a
+                href="mailto:zakis2k2@gmail.com"
+                class="button button--primary magnetic"
+                aria-label="Send email to Syed Zaki Ahmad"
+              >
+                Email Me
+              </a>
+              <a
+                href="Syed Zaki Ahmad CV26 (1).pdf"
+                class="button button--ghost magnetic"
+                download="Syed Zaki Ahmad Resume.pdf"
+                aria-label="Download Syed Zaki Ahmad resume"
+              >
+                Download Resume
+              </a>
             </div>
-            <div class="card-footer">
-              <span>Angular</span><span>TypeScript</span><span>SCSS</span>
-            </div>
-          </div>
-          <div class="card card--case-study">
-            <div class="card-top">
-              <div class="card-num">02</div>
-              <div class="card-tag">Professional System</div>
-            </div>
-            <h3>Customer Complaint Management System</h3>
-            <p>
-              Complaint workflow interface with dashboard visibility, case
-              tracking, and operational clarity.
-            </p>
-            <div class="case-study__details">
-              <span><strong>Focus</strong> Workflow visibility</span>
-              <span><strong>Role</strong> Product-facing delivery</span>
-            </div>
-            <div class="card-footer">
-              <span>Angular</span><span>RxJS</span><span>Material UI</span>
-            </div>
-          </div>
-          <div class="card card--case-study">
-            <div class="card-top">
-              <div class="card-num">03</div>
-              <div class="card-tag">ASP.NET App</div>
-            </div>
-            <h3>Meeting Scheduling App</h3>
-            <p>
-              Scheduling flow designed to simplify booking, coordination, and
-              connected page flow.
-            </p>
-            <div class="case-study__details">
-              <span><strong>Focus</strong> Booking flow</span>
-              <span><strong>Role</strong> UI plus connected workflow</span>
-            </div>
-            <div class="card-footer">
-              <span>ASP.NET Core</span><span>C#</span><span>Bootstrap</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Main Work ── -->
-    <section id="main-work" class="section reveal featured-projects">
-      <div class="featured-projects__inner section-shell">
-        <div class="featured-projects__header section-head section-head--split">
-          <div>
-            <p class="section-label">Main Work</p>
-            <h2 class="section-title">Selected Product Work & Repositories</h2>
-          </div>
-          <p class="section-intro">
-            A tighter showcase of product work and repositories that best
-            represent my current web development direction.
-          </p>
-        </div>
-        <div class="credibility-strip">
-          <article class="credibility-item">
-            <span class="credibility-item__label">Frontend Strength</span>
-            <p>
-              Polished interfaces, responsive execution, and product-facing
-              detail.
-            </p>
-          </article>
-          <article class="credibility-item">
-            <span class="credibility-item__label">System Awareness</span>
-            <p>
-              Comfortable with connected workflows, backend integration, and
-              delivery quality.
-            </p>
-          </article>
-        </div>
-        <div class="cards featured-projects__grid">
-          <div class="card">
-            <div class="card-top">
-              <div class="card-num">01</div>
-              <div class="card-tag">Professional Product</div>
-            </div>
-            <h3>NovaCTO</h3>
-            <p>
-              Frontend contribution to a fintech product focused on responsive
-              workflows and polished experience quality.
-            </p>
-            <div class="case-study__details">
-              <span><strong>Focus</strong> Fintech workflow UI</span>
-              <span><strong>Build</strong> Professional delivery</span>
-            </div>
-            <div class="card-footer">
-              <span>Angular</span><span>TypeScript</span><span>SCSS</span>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-top">
-              <div class="card-num">02</div>
-              <div class="card-tag">Professional System</div>
-            </div>
-            <h3>CustomerComplaintManagementSystem</h3>
-            <p>
-              Complaint workflow system with dashboard visibility and
-              reporting-oriented UI structure.
-            </p>
-            <div class="case-study__details">
-              <span><strong>Focus</strong> Case handling</span>
-              <span><strong>Build</strong> Operational interface</span>
-            </div>
-            <div class="card-footer">
-              <span>Angular</span><span>RxJS</span><span>Material UI</span>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-top">
-              <div class="card-num">03</div>
-              <div class="card-tag">Workflow Module</div>
-            </div>
-            <h3>Approval-LayerV1</h3>
-            <p>
-              Approval workflow module shaped around clearer decisions and more
-              reliable progression.
-            </p>
-            <div class="case-study__details">
-              <span><strong>Focus</strong> Approval flow</span>
-              <span><strong>Build</strong> Angular workflow module</span>
-            </div>
-            <div class="card-footer">
-              <span>Angular</span><span>RxJS</span><span>Bootstrap</span>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-top">
-              <div class="card-num">04</div>
-              <div class="card-tag">Personal Repository</div>
-            </div>
-            <h3>MeetingApp_ASP.NET_Core_RazorPages</h3>
-            <p>
-              Practical scheduling build combining clear page flow with
-              server-connected web application logic.
-            </p>
-            <div class="case-study__details">
-              <span><strong>Focus</strong> Scheduling flow</span>
-              <span><strong>Build</strong> ASP.NET Core app</span>
-            </div>
-            <div class="card-footer">
-              <span>ASP.NET Core</span><span>C#</span><span>Bootstrap</span>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-top">
-              <div class="card-num">05</div>
-              <div class="card-tag">Personal Repository</div>
-            </div>
-            <h3>User-Directory-App-Zaki</h3>
-            <p>
-              Angular user directory focused on maintainable UI structure and
-              practical data presentation.
-            </p>
-            <div class="case-study__details">
-              <span><strong>Focus</strong> Data UI</span>
-              <span><strong>Build</strong> Personal Angular repository</span>
-            </div>
-            <div class="card-footer">
-              <span>Angular</span><span>TypeScript</span
-              ><span>Tailwind CSS</span>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-top">
-              <div class="card-num">06</div>
-              <div class="card-tag">Personal Repository</div>
-            </div>
-            <h3>My-Ecommerce-Store-REACT</h3>
-            <p>
-              React storefront build focused on clean component flow and
-              responsive browsing experience.
-            </p>
-            <div class="case-study__details">
-              <span><strong>Focus</strong> Storefront UI</span>
-              <span><strong>Build</strong> React implementation</span>
-            </div>
-            <div class="card-footer">
-              <span>React</span><span>JavaScript</span><span>Tailwind CSS</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Skills ── -->
-    <section id="skills" class="section reveal">
-      <div class="section-shell">
-        <div class="section-head section-head--split">
-          <div>
-            <p class="section-label">Expertise</p>
-            <h2 class="section-title">Capability Intelligence</h2>
-          </div>
-          <p class="section-intro">
-            Frontend execution leads the story, backed by API design, scalable
-            backend systems, databases, cloud tooling, and architecture-aware
-            product delivery.
-          </p>
-        </div>
-        <div class="core-stack-strip">
-          <span class="core-stack-strip__label">Core Expertise</span>
-          <div class="core-stack-strip__items">
-            <span>Angular</span>
-            <span>React</span>
-            <span>JavaScript / TypeScript</span>
-            <span>Node.js</span>
-            <span>ASP.NET Core</span>
-            <span>SQL</span>
-            <span>AWS</span>
-          </div>
-        </div>
-        <div class="skills-dashboard">
-          <div class="skills-dashboard__rail">
-            <article class="skill-meter-card">
-              <div class="skill-meter-card__head">
-                <div>
-                  <p class="skill-meter-card__eyebrow">Measured Strengths</p>
-                  <h3>execution with full-stack depth.</h3>
-                </div>
-                <span class="skill-meter-card__badge">Recruiter Scan</span>
-              </div>
-              <p class="skill-meter-card__lead">
-                Strongest visually in UI systems and frontend architecture, with
-                backend, data, and platform capability supporting product
-                delivery end to end.
-              </p>
-              <div class="skills-bars skills-bars--elevated">
-                <div class="skill-row reveal-skill">
-                  <div class="skill-label">
-                    <span>JavaScript / TypeScript</span><span>93%</span>
-                  </div>
-                  <div class="skill-track">
-                    <div class="skill-fill" data-width="93"></div>
-                  </div>
-                </div>
-                <div class="skill-row reveal-skill">
-                  <div class="skill-label">
-                    <span>Angular</span><span>92%</span>
-                  </div>
-                  <div class="skill-track">
-                    <div class="skill-fill" data-width="92"></div>
-                  </div>
-                </div>
-                <div class="skill-row reveal-skill">
-                  <div class="skill-label">
-                    <span>Node.js</span><span>92%</span>
-                  </div>
-                  <div class="skill-track">
-                    <div class="skill-fill" data-width="92"></div>
-                  </div>
-                </div>
-                <div class="skill-row reveal-skill">
-                  <div class="skill-label">
-                    <span>ReactJS</span><span>90%</span>
-                  </div>
-                  <div class="skill-track">
-                    <div class="skill-fill" data-width="90"></div>
-                  </div>
-                </div>
-                <div class="skill-row reveal-skill">
-                  <div class="skill-label">
-                    <span>REST APIs / Microservices</span><span>90%</span>
-                  </div>
-                  <div class="skill-track">
-                    <div class="skill-fill" data-width="90"></div>
-                  </div>
-                </div>
-                <div class="skill-row reveal-skill">
-                  <div class="skill-label">
-                    <span>SQL / MS SQL</span><span>88%</span>
-                  </div>
-                  <div class="skill-track">
-                    <div class="skill-fill" data-width="88"></div>
-                  </div>
-                </div>
-                <div class="skill-row reveal-skill">
-                  <div class="skill-label">
-                    <span>Reliability-focused development</span><span>99%</span>
-                  </div>
-                  <div class="skill-track">
-                    <div class="skill-fill" data-width="99"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="skill-meter-card__focus">
-                <span>UI development</span>
-                <span>Performance-oriented interfaces</span>
-                <span>Scalable frontend architecture</span>
-              </div>
-            </article>
-
-            <article class="identity-band">
-              <p class="identity-band__eyebrow">Engineering DNA</p>
-              <h3>
-                full stack developer for polished, connected, production-minded
-                products.
-              </h3>
-              <div class="identity-band__signals">
-                <span>Angular, React, and UI systems</span>
-                <span>Node.js and ASP.NET Core depth</span>
-                <span>API and architecture focused</span>
-                <span>Performance and scalability mindset</span>
-                <span>Real-world product experience</span>
-                <span>Frontend + backend integration</span>
-              </div>
-            </article>
           </div>
 
-          <div class="capability-grid">
-            <article class="capability-card capability-card--primary">
-              <div class="capability-card__meta">
-                <span class="capability-card__label">Frontend</span>
-                <span class="capability-card__value">Primary Strength</span>
-              </div>
-              <h3>UI systems with performance-minded delivery.</h3>
-              <p class="capability-card__focus">
-                UI development, responsive engineering, scalable frontend
-                architecture, and polished interaction quality remain the most
-                visible layer of my work.
-              </p>
-              <div class="capability-card__chips">
-                <span>Angular 92%</span>
-                <span>ReactJS 90%</span>
-                <span>JavaScript / TypeScript 93%</span>
-                <span>Responsive UI Engineering 86%</span>
-              </div>
-            </article>
-
-            <article class="capability-card">
-              <div class="capability-card__meta">
-                <span class="capability-card__label">Backend</span>
-                <span class="capability-card__value">API-first</span>
-              </div>
-              <h3>Scalable backend systems behind connected products.</h3>
-              <p class="capability-card__focus">
-                Backend work includes API design and integration, middleware
-                development, microservices, and real-time events or
-                notification-driven flows.
-              </p>
-              <div class="capability-card__chips">
-                <span>Node.js 92%</span>
-                <span>ASP.NET Core 78%</span>
-                <span>REST APIs / Microservices 90%</span>
-                <span>Middleware Development</span>
-                <span>Real-time systems</span>
-              </div>
-            </article>
-
-            <article class="capability-card">
-              <div class="capability-card__meta">
-                <span class="capability-card__label">Database</span>
-                <span class="capability-card__value">Structured + NoSQL</span>
-              </div>
-              <h3>Data layers shaped for reporting and application flow.</h3>
-              <p class="capability-card__focus">
-                Comfortable across structured and NoSQL data handling, with
-                experience supporting analytics, reporting systems, and data
-                movement between services.
-              </p>
-              <div class="capability-card__chips">
-                <span>SQL / MS SQL 88%</span>
-                <span>MongoDB / Redis 84%</span>
-                <span>Data Warehousing 80%</span>
-                <span>Analytics systems</span>
-              </div>
-            </article>
-
-            <article class="capability-card">
-              <div class="capability-card__meta">
-                <span class="capability-card__label">DevOps &amp; Tools</span>
-                <span class="capability-card__value">Delivery Ready</span>
-              </div>
-              <h3>
-                Deployment discipline, version control, and environment flow.
-              </h3>
-              <p class="capability-card__focus">
-                I work comfortably with deployment pipelines, version control,
-                Linux environments, and practical CI/CD habits that keep
-                shipping clean and predictable.
-              </p>
-              <div class="capability-card__chips">
-                <span>AWS / Docker 78%</span>
-                <span>Git / GitHub / CI/CD 85%</span>
-                <span>Linux / Bash 82%</span>
-                <span>Agile workflows</span>
-              </div>
-            </article>
-
-            <article class="capability-card">
-              <div class="capability-card__meta">
-                <span class="capability-card__label">Architecture</span>
-                <span class="capability-card__value">System Thinking</span>
-              </div>
-              <h3>Architecture-aware engineering for scalable products.</h3>
-              <p class="capability-card__focus">
-                My engineering approach favors scalable system design,
-                performance tuning, microservices architecture, API integration,
-                and cleaner cross-system data flow.
-              </p>
-              <div class="capability-card__chips">
-                <span>System Architecture 90%</span>
-                <span>Performance Tuning</span>
-                <span>Scalable System Design</span>
-                <span>API Integration</span>
-              </div>
-            </article>
-
-            <article class="capability-card">
-              <div class="capability-card__meta">
-                <span class="capability-card__label"
-                  >Engineering Reliability</span
-                >
-                <span class="capability-card__value">Execution Quality</span>
-              </div>
-              <h3>
-                Problem solving with strong collaboration and dependability.
-              </h3>
-              <p class="capability-card__focus">
-                Delivery quality is reinforced through debugging,
-                troubleshooting, code reviews, cross-team collaboration, and a
-                reliability-first development mindset.
-              </p>
-              <div class="capability-card__chips">
-                <span>Problem Solving 94%</span>
-                <span>Reliability-focused development 99%</span>
-                <span>Code Reviews</span>
-                <span>Cross-team collaboration</span>
-                <span>Debugging</span>
-              </div>
-            </article>
-
-            <article class="capability-card capability-card--wide">
-              <div class="capability-card__meta">
-                <span class="capability-card__label">Applied Scope</span>
-                <span class="capability-card__value">Product Reality</span>
-              </div>
-              <div class="capability-card__split">
-                <div>
-                  <p class="capability-card__subheading">
-                    Full stack capabilities
-                  </p>
-                  <div class="capability-card__chips">
-                    <span>Full-stack web development</span>
-                    <span>API-first application design</span>
-                    <span>Frontend + backend integration</span>
-                    <span>Real-time applications</span>
-                    <span>Mobile + web hybrid systems</span>
-                  </div>
-                </div>
-                <div>
-                  <p class="capability-card__subheading">Domain reach</p>
-                  <div class="capability-card__chips">
-                    <span>Healthcare systems</span>
-                    <span>Logistics platforms</span>
-                    <span>Ride-sharing backend systems</span>
-                    <span>AI-assisted content platforms</span>
-                    <span>E-commerce / delivery systems</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Contact ── -->
-    <section id="now" class="section reveal now-section">
-      <div class="section-shell">
-        <div class="section-head section-head--split">
-          <div>
-            <p class="section-label">Current Focus</p>
-            <h2 class="section-title">
-              Building sharper frontend systems with stronger API and
-              architecture depth.
-            </h2>
-          </div>
-          <p class="section-intro">
-            A concise view of the product capabilities I am strengthening while
-            shipping polished, connected web experiences.
-          </p>
-        </div>
-        <div class="now-layout">
-          <article class="now-panel now-panel--primary">
-            <p class="now-panel__eyebrow">Now Building Toward</p>
-            <h3>
-              Cleaner UI systems with more scalable backend-connected flow.
-            </h3>
-            <p>
-              I am focused on stronger frontend architecture, API-first product
-              delivery, performance tuning, and the systems thinking required
-              for reliable full stack applications.
-            </p>
-          </article>
-          <div class="now-stream">
-            <article class="now-card">
-              <span class="now-card__label">Shipping With</span>
-              <p>Angular, React, Node.js, ASP.NET Core, SQL, AWS</p>
-            </article>
-            <article class="now-card">
-              <span class="now-card__label">Improving</span>
-              <p>
-                Performance tuning, reusable UI systems, APIs, and data flow
-              </p>
-            </article>
-            <article class="now-card">
-              <span class="now-card__label">Best Fit Domains</span>
-              <p>
-                Healthcare, logistics, ride-sharing, AI-assisted content, and
-                e-commerce platforms
-              </p>
-            </article>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="contact" class="section reveal">
-      <div class="section-shell">
-        <div class="section-head section-head--split">
-          <div>
-            <p class="section-label">Get In Touch</p>
-            <h2 class="section-title">Let's Work Together</h2>
-          </div>
-          <p class="section-intro">
-            Open to full stack web roles, product collaboration, and
-            frontend-led delivery work where interface quality still matters.
-          </p>
-        </div>
-        <div class="profile-links" aria-label="Professional profiles">
-          <a
-            href="https://github.com/Zaki2K2"
-            class="profile-card"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="View Syed Zaki Ahmad on GitHub"
-          >
-            <div class="profile-card__header">
-              <div class="profile-card__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img" focusable="false">
-                  <path
-                    fill="currentColor"
-                    d="M12 .5C5.65.5.5 5.65.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2.17c-3.2.7-3.88-1.35-3.88-1.35-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.75 1.18 1.75 1.18 1.02 1.75 2.68 1.24 3.33.95.1-.74.4-1.24.72-1.52-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.17a10.98 10.98 0 0 1 5.77 0c2.2-1.48 3.16-1.17 3.16-1.17.63 1.58.24 2.75.12 3.04.74.8 1.18 1.82 1.18 3.07 0 4.41-2.69 5.39-5.25 5.67.41.35.78 1.03.78 2.08v3.08c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"
-                  />
-                </svg>
-              </div>
-              <div class="profile-card__platform-group">
-                <span class="profile-card__platform">GitHub</span>
-                <span class="profile-card__handle">@Zaki2K2</span>
-              </div>
-            </div>
-            <div class="profile-card__body">
-              <h3 class="profile-card__name">Syed Zaki Ahmad</h3>
-              <p class="profile-card__role">Full Stack Web Developer</p>
-              <p class="profile-card__description">
-                Explore selected product builds, repositories, and practical web
-                development work.
-              </p>
-            </div>
-            <div class="profile-card__meta">
-              <span>Islamabad, Pakistan</span>
-              <span>Code & Repositories</span>
-            </div>
-            <span class="profile-card__cta">View GitHub</span>
-          </a>
-          <a
-            href="https://www.linkedin.com/in/syed-zaki-ahmad-742b741aa/"
-            class="profile-card profile-card--linkedin"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="View Syed Zaki Ahmad on LinkedIn"
-          >
-            <div class="profile-card__header">
-              <div class="profile-card__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img" focusable="false">
-                  <path
-                    fill="currentColor"
-                    d="M4.98 3.5A1.48 1.48 0 1 0 5 6.46 1.48 1.48 0 0 0 4.98 3.5ZM3.75 8.25h2.5v12h-2.5v-12Zm6 0h2.4v1.64h.03c.33-.63 1.15-1.3 2.37-1.3 2.53 0 3 1.67 3 3.84v7.82h-2.5v-6.93c0-1.65-.03-3.77-2.3-3.77-2.3 0-2.65 1.8-2.65 3.65v7.05h-2.5v-12Z"
-                  />
-                </svg>
-              </div>
-              <div class="profile-card__platform-group">
-                <span class="profile-card__platform">LinkedIn</span>
-                <span class="profile-card__handle"
-                  >syed-zaki-ahmad-742b741aa</span
-                >
-              </div>
-            </div>
-            <div class="profile-card__body">
-              <h3 class="profile-card__name">Syed Zaki Ahmad</h3>
-              <p class="profile-card__role">Full Stack Web Developer</p>
-              <p class="profile-card__description">
-                View my professional profile, experience, and broader web
-                development direction.
-              </p>
-            </div>
-            <div class="profile-card__meta">
-              <span>Islamabad, Pakistan</span>
-              <span>Experience & Network</span>
-            </div>
-            <span class="profile-card__cta">View LinkedIn</span>
-          </a>
-          <a
-            href="Syed Zaki Ahmad CV26 (1).pdf"
-            class="profile-card profile-card--resume"
-            download="Syed Zaki Ahmad Resume.pdf"
-            aria-label="Download Syed Zaki Ahmad resume PDF"
-          >
-            <div class="profile-card__header">
-              <div class="profile-card__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img" focusable="false">
-                  <path
-                    fill="currentColor"
-                    d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7l-5-5Zm0 1.5L17.5 7H14V3.5ZM12 10a1 1 0 0 1 1 1v3.59l1.3-1.29a1 1 0 1 1 1.4 1.41l-3 3a1 1 0 0 1-1.4 0l-3-3a1 1 0 1 1 1.4-1.41L11 14.59V11a1 1 0 0 1 1-1Zm-3 9a1 1 0 1 1 0-2h6a1 1 0 1 1 0 2H9Z"
-                  />
-                </svg>
-              </div>
-              <div class="profile-card__platform-group">
-                <span class="profile-card__platform">Resume PDF</span>
-                <span class="profile-card__handle">Syed Zaki Ahmad CV</span>
-              </div>
-            </div>
-            <div class="profile-card__body">
-              <h3 class="profile-card__name">Syed Zaki Ahmad</h3>
-              <p class="profile-card__role">Full Stack Web Developer</p>
-              <p class="profile-card__description">
-                Download a concise overview of experience, selected work, and
-                full stack capability.
-              </p>
-            </div>
-            <div class="profile-card__meta">
-              <span>Islamabad, Pakistan</span>
-              <span>Downloadable PDF</span>
-            </div>
-            <span class="profile-card__cta">Download Resume</span>
-          </a>
-        </div>
-        <div class="contact-grid">
-          <div class="contact-info contact-panel">
-            <p class="contact-lead">
-              If you need a full stack web developer with a frontend-first
-              mindset for polished interfaces, connected workflows, and reliable
-              product delivery, I'd be glad to connect.
-            </p>
-            <div class="contact-pills">
-              <span>Full Stack Web Roles</span>
-              <span>API-First Products</span>
-              <span>Frontend System Delivery</span>
-            </div>
-            <div class="contact-availability">
-              <p class="contact-availability__title">Available For</p>
-              <div class="contact-availability__grid">
-                <article class="contact-availability__item">
-                  <span>Full Stack Web Development</span>
-                  <p>
-                    Modern web products with polished interfaces and connected
-                    application flows.
-                  </p>
-                </article>
-                <article class="contact-availability__item">
-                  <span>Frontend-Led Product Work</span>
-                  <p>
-                    UI systems, implementation detail, and strong product-facing
-                    execution.
-                  </p>
-                </article>
-                <article class="contact-availability__item">
-                  <span>Freelance / Contract</span>
-                  <p>
-                    Short-term collaboration, feature delivery, and practical
-                    implementation support.
-                  </p>
-                </article>
-              </div>
-            </div>
-            <div class="contact-items">
-              <div class="contact-item">
-                <span class="contact-icon">&#9993;</span>
-                <span>zakis2k2@gmail.com</span>
-              </div>
-              <div class="contact-item">
-                <span class="contact-icon">&#128205;</span>
-                <span>Islamabad, Pakistan</span>
-              </div>
-            </div>
+          <div class="contact-stack">
             <a
-              href="https://wa.me/923315527077"
-              class="contact-action contact-action--whatsapp"
+              class="contact-card"
+              href="mailto:zakis2k2@gmail.com"
+              data-reveal
+            >
+              <span class="contact-card__label">Email</span>
+              <strong>zakis2k2@gmail.com</strong>
+              <p>
+                Direct product inquiries, freelance builds, collaboration, and
+                serious engineering discussions.
+              </p>
+            </a>
+
+            <a
+              class="contact-card"
+              href="https://www.linkedin.com/in/syed-zaki-ahmad-742b741aa/"
               target="_blank"
               rel="noreferrer"
-              aria-label="Message Syed Zaki Ahmad on WhatsApp"
+              data-reveal
+              aria-label="Open LinkedIn profile for Syed Zaki Ahmad"
             >
-              <div class="contact-action__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" role="img" focusable="false">
-                  <path
-                    fill="currentColor"
-                    d="M20.52 3.48A11.84 11.84 0 0 0 12.08 0C5.5 0 .16 5.35.16 11.94c0 2.1.55 4.15 1.6 5.96L0 24l6.27-1.64a11.88 11.88 0 0 0 5.8 1.49h.01c6.58 0 11.93-5.35 11.93-11.94 0-3.19-1.24-6.2-3.49-8.43ZM12.08 21.8h-.01a9.8 9.8 0 0 1-4.99-1.37l-.36-.22-3.72.97.99-3.63-.24-.37a9.82 9.82 0 0 1 8.32-15.06 9.76 9.76 0 0 1 6.95 2.88 9.75 9.75 0 0 1 2.87 6.95c0 5.42-4.41 9.84-9.81 9.84Zm5.39-7.34c-.29-.15-1.71-.85-1.98-.95-.27-.1-.46-.15-.66.15-.2.29-.76.95-.93 1.14-.17.2-.34.22-.63.07-.29-.15-1.21-.45-2.31-1.42-.86-.77-1.44-1.72-1.61-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.2-.29.29-.49.1-.2.05-.37-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.58-.48-.5-.66-.51-.17-.01-.36-.01-.56-.01-.2 0-.51.07-.78.37-.27.29-1.02 1-.98 2.43.05 1.44 1.03 2.83 1.18 3.03.15.2 2.03 3.1 5.02 4.23.71.31 1.27.5 1.7.64.71.22 1.35.19 1.86.12.57-.08 1.71-.7 1.95-1.38.24-.68.24-1.26.17-1.38-.07-.12-.27-.19-.56-.34Z"
-                  />
-                </svg>
-              </div>
-              <div class="contact-action__content">
-                <span class="contact-action__eyebrow">WhatsApp Direct</span>
-                <strong>Message on WhatsApp</strong>
-                <p>
-                  Reach out directly for quick discussion, freelance work, or
-                  collaboration.
-                </p>
-              </div>
-              <span class="contact-action__cta">Chat on WhatsApp</span>
+              <span class="contact-card__label">LinkedIn</span>
+              <strong>syed-zaki-ahmad-742b741aa</strong>
+              <p>
+                Professional profile, network visibility, and broader
+                engineering direction.
+              </p>
             </a>
-            <p class="contact-note">
-              Best fit for product teams that need strong UI execution with
-              practical full stack delivery.
-            </p>
-            <p class="contact-note contact-note--trust">
-              I work best where clean implementation, dependable collaboration,
-              and connected product workflows matter.
-            </p>
-          </div>
-          <form
-            class="contact-form contact-panel"
-            action="https://formspree.io/f/YOUR_FORM_ID"
-            method="POST"
-            onsubmit="handleForm(event)"
-          >
-            <input
-              type="hidden"
-              name="_subject"
-              value="New portfolio inquiry from syedzaki.dev"
-            />
-            <div class="form-group">
-              <input
-                type="text"
-                name="name"
-                placeholder="Your Name"
-                autocomplete="name"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <input
-                type="email"
-                name="email"
-                placeholder="Your Email"
-                autocomplete="email"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <input type="text" name="subject" placeholder="Subject" />
-            </div>
-            <div class="form-group">
-              <textarea
-                name="message"
-                rows="5"
-                placeholder="Tell me about your project..."
-                required
-              ></textarea>
-            </div>
-            <p class="form-note">
-              Your message will be delivered directly to my inbox.
-            </p>
-            <button type="submit" class="form-btn">Send Message</button>
-            <p
-              class="form-status"
-              id="formStatus"
-              role="status"
-              aria-live="polite"
-            >
-              Message sent. I'll get back to you soon.
-            </p>
-          </form>
-        </div>
-      </div>
-    </section>
 
-    <!-- ── Footer ── -->
+            <div class="contact-card contact-card--brief" data-reveal>
+              <span class="contact-card__label">Project Brief Layout</span>
+              <div class="contact-form-shell" aria-label="Project brief layout">
+                <div class="input-shell">Name</div>
+                <div class="input-shell">Email</div>
+                <div class="input-shell">Product / System Type</div>
+                <div class="input-shell input-shell--large">
+                  Tell me what you want to build
+                </div>
+                <a
+                  href="mailto:zakis2k2@gmail.com?subject=Let%27s%20Build"
+                  class="button button--secondary"
+                >
+                  Start the Conversation
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
     <footer class="footer">
-      <div class="footer-inner">
-        <div class="footer-logo">SZ</div>
-        <p class="footer-copy">
-          &copy; 2026 Syed Zaki Ahmad. Crafted with precision.
-        </p>
-        <a href="#hero" class="back-top">Back to top &#8593;</a>
+      <div class="container footer__inner">
+        <div>
+          <p class="footer__brand">Syed Zaki Ahmad</p>
+          <p class="footer__copy">
+            Full Stack Developer | AI-Driven Web Products | Automation &amp;
+            Agentic Systems
+          </p>
+        </div>
+        <a href="#home" class="footer__link" data-nav-link>Back to top</a>
       </div>
     </footer>
 
     <script src="three.min.js"></script>
+    <script src="cosmic-scene.js"></script>
     <script src="main.js"></script>
-    <script src="app.js"></script>
   </body>
 </html>

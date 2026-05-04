@@ -1,356 +1,725 @@
 (() => {
-const canvas = document.getElementById('bg');
-const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-const prefersReducedMotion = reducedMotionQuery.matches;
-const compactViewport = window.innerWidth < 768;
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const prefersReducedMotion = () => reducedMotionQuery.matches;
+  const coarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
-const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true,
-  alpha: true,
-});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, compactViewport ? 1.5 : 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-if ('outputColorSpace' in renderer) {
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-}
-if ('toneMapping' in renderer) {
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = compactViewport ? 0.92 : 0.98;
-}
-
-const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x010204, compactViewport ? 0.02 : 0.017);
-
-const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 160);
-camera.position.set(0, 0.35, 6.2);
-
-const palette = {
-  sky: new THREE.Color(0x010204),
-  cyan: new THREE.Color(0x6ed5ff),
-  violet: new THREE.Color(0x756dff),
-  blue: new THREE.Color(0x0b1630),
-  gold: new THREE.Color(0xffc15a),
-  core: new THREE.Color(0xeef4ff),
-};
-
-function createGlowSphere(radius, color, opacity, segments = 26) {
-  return new THREE.Mesh(
-    new THREE.SphereGeometry(radius, segments, segments),
-    new THREE.MeshBasicMaterial({
-      color,
-      transparent: true,
-      opacity,
-      depthWrite: false,
-    }),
-  );
-}
-
-function createGalaxyLayer({
-  count,
-  arms = 4,
-  innerRadius = 1,
-  outerRadius = 10,
-  spin = 1.2,
-  verticalScale = 0.26,
-  depthSpread = 2.2,
-  jitter = 0.35,
-  size = 0.045,
-  opacity = 0.18,
-}) {
-  const positions = new Float32Array(count * 3);
-  const colors = new Float32Array(count * 3);
-  const geometry = new THREE.BufferGeometry();
-  const tint = new THREE.Color();
-
-  for (let i = 0; i < count; i += 1) {
-    const arm = i % arms;
-    const radialBias = Math.pow(Math.random(), 1.4);
-    const radius = innerRadius + radialBias * (outerRadius - innerRadius);
-    const baseAngle = (arm / arms) * Math.PI * 2 + radius * spin;
-    const angle = baseAngle + (Math.random() - 0.5) * (0.24 + radius * 0.03);
-
-    positions[i * 3] =
-      Math.cos(angle) * radius + (Math.random() - 0.5) * jitter;
-    positions[i * 3 + 1] =
-      Math.sin(angle) * radius * verticalScale + (Math.random() - 0.5) * 0.45;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * depthSpread;
-
-    tint
-      .copy(Math.random() > 0.5 ? palette.cyan : palette.violet)
-      .lerp(palette.core, Math.random() * 0.22);
-
-    colors[i * 3] = tint.r;
-    colors[i * 3 + 1] = tint.g;
-    colors[i * 3 + 2] = tint.b;
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
   }
 
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  window.scrollTo(0, 0);
 
-  return new THREE.Points(
-    geometry,
-    new THREE.PointsMaterial({
-      size,
-      transparent: true,
-      opacity,
-      vertexColors: true,
-      sizeAttenuation: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    }),
+  const body = document.body;
+  const navbar = document.getElementById("navbar");
+  const navToggle = document.getElementById("navToggle");
+  const navPanel = document.getElementById("mobileMenu");
+  const preloader = document.getElementById("preloader");
+  const preloaderCanvas = document.getElementById("preloaderCanvas");
+  const preloaderPhase = document.getElementById("preloaderPhase");
+  const preloaderProgress = document.getElementById("preloaderProgress");
+  const preloaderBar = document.getElementById("preloaderBar");
+  const preloaderCore = document.getElementById("preloaderCore");
+  const preloaderSkip = document.getElementById("preloaderSkip");
+  const ambientAudio = document.getElementById("ambientAudio");
+  const soundToggle = document.getElementById("soundToggle");
+  const soundMenuToggle = document.getElementById("soundMenuToggle");
+  const audioMenu = document.getElementById("audioMenu");
+  const soundModeLabel = document.getElementById("soundModeLabel");
+  const audioModeButtons = document.querySelectorAll("[data-audio-mode]");
+  const cursorDot = document.querySelector(".cursor-dot");
+  const cursorRing = document.querySelector(".cursor-ring");
+  const revealNodes = document.querySelectorAll("[data-reveal]");
+  const countNodes = document.querySelectorAll(".count-up");
+  const magneticNodes = document.querySelectorAll(".magnetic");
+  const navLinks = document.querySelectorAll("[data-nav-link]");
+  const sceneSections = document.querySelectorAll(".scene-section");
+  const filterChips = document.querySelectorAll(".filter-chip");
+  const projectTiles = document.querySelectorAll(".project-tile");
+  const heroDeck = document.getElementById("heroDeck");
+  const interactiveGlowNodes = document.querySelectorAll(".project-feature, .project-tile, .contact-card, .skill-panel");
+  const interactiveNodes = document.querySelectorAll(
+    "a, button, .project-feature, .project-tile, .about-panel, .ai-card, .skill-panel, .contact-card, .hero-proof__item, #heroDeck",
   );
-}
-
-function createPlanet({
-  radius,
-  color,
-  emissive,
-  position,
-  glowColor,
-  glowOpacity,
-  ring = null,
-  opacity = 1,
-}) {
-  const group = new THREE.Group();
-
-  const planet = new THREE.Mesh(
-    new THREE.SphereGeometry(radius, compactViewport ? 26 : 34, compactViewport ? 26 : 34),
-    new THREE.MeshStandardMaterial({
-      color,
-      emissive,
-      emissiveIntensity: 0.34,
-      roughness: 0.78,
-      metalness: 0.08,
-      transparent: opacity < 1,
-      opacity,
-    }),
-  );
-
-  const atmosphere = createGlowSphere(radius * 1.18, glowColor, glowOpacity, 22);
-  atmosphere.scale.set(1, 0.96, 1);
-
-  group.add(atmosphere);
-  group.add(planet);
-
-  let ringMesh = null;
-  if (ring) {
-    ringMesh = new THREE.Mesh(
-      new THREE.TorusGeometry(radius * ring.radiusScale, ring.tube, 10, 180),
-      new THREE.MeshBasicMaterial({
-        color: ring.color,
-        transparent: true,
-        opacity: ring.opacity,
-      }),
-    );
-    ringMesh.rotation.set(ring.rotation[0], ring.rotation[1], ring.rotation[2]);
-    ringMesh.scale.set(ring.scale[0], ring.scale[1], ring.scale[2]);
-    group.add(ringMesh);
-  }
-
-  group.position.set(position[0], position[1], position[2]);
-
-  return {
-    group,
-    planet,
-    atmosphere,
-    ring: ringMesh,
-    basePosition: group.position.clone(),
-  };
-}
-
-const galaxyGroup = new THREE.Group();
-galaxyGroup.position.set(-0.3, 0.4, -18);
-galaxyGroup.rotation.x = -0.3;
-galaxyGroup.rotation.z = 0.16;
-scene.add(galaxyGroup);
-
-const galaxyMain = createGalaxyLayer({
-  count: prefersReducedMotion ? 240 : compactViewport ? 460 : 820,
-  arms: 4,
-  innerRadius: 1.2,
-  outerRadius: compactViewport ? 8.4 : 10.2,
-  spin: 1.42,
-  verticalScale: 0.2,
-  depthSpread: 2.2,
-  jitter: 0.28,
-  size: compactViewport ? 0.035 : 0.04,
-  opacity: prefersReducedMotion ? 0.08 : 0.12,
-});
-const galaxyDust = createGalaxyLayer({
-  count: prefersReducedMotion ? 180 : compactViewport ? 320 : 620,
-  arms: 5,
-  innerRadius: 2,
-  outerRadius: compactViewport ? 10 : 12.4,
-  spin: 1.05,
-  verticalScale: 0.26,
-  depthSpread: 3,
-  jitter: 0.5,
-  size: compactViewport ? 0.024 : 0.03,
-  opacity: prefersReducedMotion ? 0.05 : 0.08,
-});
-galaxyGroup.add(galaxyDust);
-galaxyGroup.add(galaxyMain);
-
-const sunGroup = new THREE.Group();
-const sun = new THREE.Mesh(
-  new THREE.SphereGeometry(compactViewport ? 0.68 : 0.82, 32, 32),
-  new THREE.MeshBasicMaterial({
-    color: 0xffd26c,
-  }),
-);
-const sunAura = createGlowSphere(compactViewport ? 1.3 : 1.65, 0xffb347, 0.06, 28);
-const sunOuterAura = createGlowSphere(compactViewport ? 1.9 : 2.35, 0xff9f43, 0.025, 24);
-sunGroup.add(sunOuterAura);
-sunGroup.add(sunAura);
-sunGroup.add(sun);
-sunGroup.position.set(compactViewport ? 3.8 : 5.1, compactViewport ? 1.75 : 2.35, compactViewport ? -10.5 : -13.2);
-scene.add(sunGroup);
-
-const planets = [
-  createPlanet({
-    radius: compactViewport ? 0.44 : 0.56,
-    color: 0x385ea7,
-    emissive: 0x173e7e,
-    position: [compactViewport ? 2.8 : 3.35, compactViewport ? 0.55 : 0.82, compactViewport ? -7.6 : -8.8],
-    glowColor: 0x7fdcff,
-    glowOpacity: 0.09,
-  }),
-  createPlanet({
-    radius: compactViewport ? 0.54 : 0.68,
-    color: 0x233e6d,
-    emissive: 0x132c58,
-    position: [compactViewport ? -3.9 : -5.1, compactViewport ? 1.1 : 1.35, compactViewport ? -11.8 : -13.8],
-    glowColor: 0x9fa8ff,
-    glowOpacity: 0.07,
-    ring: {
-      radiusScale: 1.7,
-      tube: compactViewport ? 0.014 : 0.018,
-      color: 0x7fdcff,
-      opacity: 0.18,
-      rotation: [1.24, 0.2, 0.32],
-      scale: [1.26, 0.42, 1],
+  const stageLabels = [
+    "Initializing Universe",
+    "Forming Interface",
+    "Launching Portfolio",
+  ];
+  const SOUND_STORAGE_KEY = "portfolio-sound-enabled";
+  const SOUND_MODE_STORAGE_KEY = "portfolio-sound-mode";
+  const AUDIO_TRACKS = {
+    piano: {
+      label: "Piano",
+      src: "assets/audio/piano-ambient.mp3",
+      fallback: "assets/audio/piano-ambient.wav",
     },
-  }),
-  createPlanet({
-    radius: compactViewport ? 0.22 : 0.28,
-    color: 0x6b79ff,
-    emissive: 0x3d4eff,
-    position: [compactViewport ? -0.9 : -1.2, compactViewport ? 2.45 : 3.1, compactViewport ? -15 : -18],
-    glowColor: 0xaeb8ff,
-    glowOpacity: 0.06,
-  }),
-  createPlanet({
-    radius: compactViewport ? 0.18 : 0.24,
-    color: 0x314f88,
-    emissive: 0x183261,
-    position: [compactViewport ? 0.8 : 1.2, compactViewport ? 1.65 : 2.15, compactViewport ? -12.5 : -15.5],
-    glowColor: 0x7be5ff,
-    glowOpacity: 0.05,
-  }),
-];
-planets.forEach((entry) => scene.add(entry.group));
+    violin: {
+      label: "Violin",
+      src: "assets/audio/violin-ambient.mp3",
+      fallback: "assets/audio/violin-ambient.wav",
+    },
+    guitar: {
+      label: "Guitar",
+      src: "assets/audio/guitar-ambient.mp3",
+      fallback: "assets/audio/guitar-ambient.wav",
+    },
+    jazz: {
+      label: "Jazz",
+      src: "assets/audio/jazz-ambient.mp3",
+      fallback: "assets/audio/jazz-ambient.wav",
+    },
+    classical: {
+      label: "Classical",
+      src: "assets/audio/classical-ambient.mp3",
+      fallback: "assets/audio/classical-ambient.wav",
+    },
+    pop: {
+      label: "Pop",
+      src: "assets/audio/pop-ambient.mp3",
+      fallback: "assets/audio/pop-ambient.wav",
+    },
+  };
 
-const starfieldCount = prefersReducedMotion ? 280 : compactViewport ? 480 : 840;
-const starfieldGeometry = new THREE.BufferGeometry();
-const starPositions = new Float32Array(starfieldCount * 3);
-for (let i = 0; i < starfieldCount; i += 1) {
-  starPositions[i * 3] = (Math.random() - 0.5) * 26;
-  starPositions[i * 3 + 1] = (Math.random() - 0.5) * 18;
-  starPositions[i * 3 + 2] = -4 - Math.random() * 26;
-}
-starfieldGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-const starfield = new THREE.Points(
-  starfieldGeometry,
-  new THREE.PointsMaterial({
-    color: 0x5667cc,
-    size: compactViewport ? 0.02 : 0.024,
-    transparent: true,
-    opacity: 0.28,
-    depthWrite: false,
-  }),
-);
-scene.add(starfield);
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.32));
+  const closeMenu = () => {
+    navToggle?.setAttribute("aria-expanded", "false");
+    navPanel?.classList.remove("is-open");
+    body.classList.remove("menu-open");
+  };
 
-const keyLight = new THREE.PointLight(0x7fe2ff, 3.6, 22);
-keyLight.position.set(3.8, 2.2, 3.8);
-scene.add(keyLight);
+  navToggle?.addEventListener("click", () => {
+    const isOpen = navPanel?.classList.toggle("is-open");
+    navToggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
+    body.classList.toggle("menu-open", Boolean(isOpen));
+  });
 
-const fillLight = new THREE.PointLight(0x7a72ff, 2.2, 22);
-fillLight.position.set(-4.5, 0.2, 2.8);
-scene.add(fillLight);
+  navLinks.forEach((link) => {
+    link.addEventListener("click", closeMenu);
+  });
 
-const sunLight = new THREE.PointLight(0xffc76a, 4.2, 40);
-sunLight.position.copy(sunGroup.position);
-scene.add(sunLight);
+  document.addEventListener("click", (event) => {
+    if (!navPanel?.classList.contains("is-open")) return;
+    if (navbar?.contains(event.target)) return;
+    closeMenu();
+  });
 
-const mouse = { x: 0, y: 0 };
-const smooth = { x: 0, y: 0 };
+  let finishPreloader = () => {};
 
-window.addEventListener('mousemove', (e) => {
-  mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
-  mouse.y = -(e.clientY / window.innerHeight - 0.5) * 2;
-});
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-const clock = new THREE.Clock();
-
-function animate() {
-  requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
-
-  smooth.x += (mouse.x - smooth.x) * 0.035;
-  smooth.y += (mouse.y - smooth.y) * 0.035;
-
-  sunGroup.position.x = (compactViewport ? 3.8 : 5.1) + smooth.x * 0.38;
-  sunGroup.position.y = (compactViewport ? 1.75 : 2.35) + smooth.y * 0.18;
-  sunAura.scale.setScalar(1 + Math.sin(t * 0.9) * 0.06);
-  sunOuterAura.scale.setScalar(1 + Math.cos(t * 0.6) * 0.08);
-  sunLight.position.copy(sunGroup.position);
-  sunLight.intensity = 4 + Math.sin(t * 0.85) * 0.24;
-
-  planets.forEach((entry, index) => {
-    const drift = t * (0.08 + index * 0.018) + index * 1.4;
-    entry.group.position.x = entry.basePosition.x + Math.cos(drift) * 0.12;
-    entry.group.position.y = entry.basePosition.y + Math.sin(drift) * 0.16;
-    entry.group.rotation.y += 0.0018 + index * 0.0004;
-    entry.planet.rotation.y += 0.0014 + index * 0.00035;
-    entry.atmosphere.material.opacity =
-      (index === 0 ? 0.09 : index === 1 ? 0.07 : 0.055) +
-      Math.sin(drift * 1.4) * 0.01;
-    if (entry.ring) {
-      entry.ring.rotation.z += 0.0016;
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeMenu();
+      finishPreloader(true);
     }
   });
 
-  galaxyGroup.position.x = -0.3 + smooth.x * 0.22;
-  galaxyGroup.position.y = 0.4 + smooth.y * 0.14;
-  galaxyGroup.rotation.z = 0.16 + t * (prefersReducedMotion ? 0.0016 : 0.0032);
-  galaxyMain.rotation.z = t * 0.008;
-  galaxyDust.rotation.z = -t * 0.004;
-  galaxyDust.rotation.y = Math.sin(t * 0.08) * 0.04;
+  window.addEventListener(
+    "scroll",
+    () => {
+      navbar?.classList.toggle("is-scrolled", window.scrollY > 28);
+    },
+    { passive: true },
+  );
 
-  starfield.rotation.y = t * 0.006;
-  starfield.rotation.x = t * 0.0025;
+  const initActiveNav = () => {
+    if (!sceneSections.length || !navLinks.length) return;
 
-  camera.position.x = smooth.x * 0.22;
-  camera.position.y = 0.28 + smooth.y * 0.14;
-  camera.lookAt(smooth.x * 0.32, smooth.y * 0.12, -11.5);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = entry.target.id;
+          navLinks.forEach((link) => {
+            const isMatch = link.getAttribute("href") === `#${id}`;
+            link.classList.toggle("is-active", isMatch);
+          });
+        });
+      },
+      {
+        threshold: 0.45,
+        rootMargin: "-12% 0px -30% 0px",
+      },
+    );
 
-  keyLight.position.x = 3.8 + smooth.x * 0.36;
-  keyLight.position.y = 2.2 + smooth.y * 0.22;
-  fillLight.position.x = -4.5 - smooth.x * 0.28;
-  fillLight.position.y = 0.2 - smooth.y * 0.16;
+    sceneSections.forEach((section) => observer.observe(section));
+  };
 
-  renderer.render(scene, camera);
-}
+  const initReveal = () => {
+    if (prefersReducedMotion()) {
+      revealNodes.forEach((node) => node.classList.add("is-visible"));
+      return;
+    }
 
-animate();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.14 },
+    );
+
+    revealNodes.forEach((node) => observer.observe(node));
+  };
+
+  const initCounters = () => {
+    const runCounter = (node) => {
+      const target = Number(node.dataset.count || 0);
+      if (!target) return;
+
+      if (prefersReducedMotion()) {
+        node.textContent = String(target);
+        return;
+      }
+
+      const duration = 1200;
+      const startedAt = performance.now();
+
+      const tick = (now) => {
+        const progress = clamp((now - startedAt) / duration, 0, 1);
+        const eased = 1 - (1 - progress) ** 3;
+        node.textContent = String(Math.round(target * eased));
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+
+      requestAnimationFrame(tick);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          runCounter(entry.target);
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.45 },
+    );
+
+    countNodes.forEach((node) => observer.observe(node));
+  };
+
+  const initCursor = () => {
+    if (!cursorDot || !cursorRing || coarsePointer) return;
+
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let ringX = mouseX;
+    let ringY = mouseY;
+    let visible = false;
+
+    window.addEventListener(
+      "mousemove",
+      (event) => {
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+        if (!visible) {
+          visible = true;
+          cursorDot.style.opacity = "1";
+          cursorRing.style.opacity = "1";
+        }
+      },
+      { passive: true },
+    );
+
+    document.addEventListener("mouseleave", () => {
+      visible = false;
+      cursorDot.style.opacity = "0";
+      cursorRing.style.opacity = "0";
+    });
+
+    interactiveNodes.forEach((node) => {
+      node.addEventListener("mouseenter", () => cursorRing.classList.add("is-active"));
+      node.addEventListener("mouseleave", () => cursorRing.classList.remove("is-active"));
+    });
+
+    const loop = () => {
+      ringX += (mouseX - ringX) * 0.18;
+      ringY += (mouseY - ringY) * 0.18;
+      cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+      cursorRing.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
+      requestAnimationFrame(loop);
+    };
+
+    requestAnimationFrame(loop);
+  };
+
+  const initMagnetic = () => {
+    if (prefersReducedMotion() || coarsePointer) return;
+
+    magneticNodes.forEach((node) => {
+      node.addEventListener("mousemove", (event) => {
+        const rect = node.getBoundingClientRect();
+        const x = (event.clientX - rect.left - rect.width / 2) * 0.14;
+        const y = (event.clientY - rect.top - rect.height / 2) * 0.14;
+        node.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      });
+
+      node.addEventListener("mouseleave", () => {
+        node.style.transform = "";
+      });
+    });
+  };
+
+  const initPointerGlow = () => {
+    if (prefersReducedMotion() || coarsePointer) return;
+
+    interactiveGlowNodes.forEach((node) => {
+      node.addEventListener("mousemove", (event) => {
+        const rect = node.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        node.style.setProperty("--glow-x", `${x}%`);
+        node.style.setProperty("--glow-y", `${y}%`);
+      });
+    });
+  };
+
+  const initHeroDeckTilt = () => {
+    if (!heroDeck || prefersReducedMotion() || coarsePointer) return;
+
+    heroDeck.addEventListener("mousemove", (event) => {
+      const panel = heroDeck.querySelector(".deck-panel");
+      if (!panel) return;
+      const rect = heroDeck.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+      panel.style.transform = `rotateX(${(-y * 8).toFixed(2)}deg) rotateY(${(x * 10).toFixed(2)}deg)`;
+    });
+
+    heroDeck.addEventListener("mouseleave", () => {
+      const panel = heroDeck.querySelector(".deck-panel");
+      if (!panel) return;
+      panel.style.transform = "";
+    });
+  };
+
+  const initProjectFilters = () => {
+    if (!filterChips.length || !projectTiles.length) return;
+
+    filterChips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const filter = chip.dataset.filter || "all";
+
+        filterChips.forEach((item) => {
+          const isActive = item === chip;
+          item.classList.toggle("is-active", isActive);
+          item.setAttribute("aria-pressed", String(isActive));
+        });
+
+        projectTiles.forEach((tile) => {
+          const categories = (tile.dataset.category || "").split(/\s+/).filter(Boolean);
+          const matches = filter === "all" || categories.includes(filter);
+          tile.classList.toggle("is-hidden", !matches);
+        });
+      });
+    });
+  };
+
+  const initSound = () => {
+    if (!ambientAudio || !soundToggle || !soundMenuToggle || !audioMenu) return;
+
+    let soundEnabled = localStorage.getItem(SOUND_STORAGE_KEY) === "true";
+    let currentMode = localStorage.getItem(SOUND_MODE_STORAGE_KEY) || "piano";
+    if (!AUDIO_TRACKS[currentMode]) currentMode = "piano";
+    let interactionArmed = false;
+    let fadeInterval = 0;
+    let audioUnavailable = false;
+    let menuOpen = false;
+    let sourceAttempt = 0;
+    let pendingSource = "";
+    const preferFallback = ambientAudio.dataset.preferFormat === "wav";
+
+    ambientAudio.volume = 0;
+    ambientAudio.preload = "none";
+
+    const closeSoundMenu = () => {
+      menuOpen = false;
+      audioMenu.classList.remove("is-open");
+      soundMenuToggle.setAttribute("aria-expanded", "false");
+      soundToggle.classList.remove("is-open");
+    };
+
+    const openSoundMenu = () => {
+      menuOpen = true;
+      audioMenu.classList.add("is-open");
+      soundMenuToggle.setAttribute("aria-expanded", "true");
+      soundToggle.classList.add("is-open");
+    };
+
+    const setModeUi = () => {
+      const track = AUDIO_TRACKS[currentMode];
+      if (soundModeLabel && track) {
+        soundModeLabel.textContent = track.label;
+      }
+      audioModeButtons.forEach((button) => {
+        const isActive = button.dataset.audioMode === currentMode;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+      });
+    };
+
+    const setSoundUi = (enabled, label) => {
+      soundToggle.classList.toggle("is-on", enabled);
+      soundToggle.setAttribute("aria-pressed", String(enabled));
+      soundToggle.setAttribute(
+        "aria-label",
+        audioUnavailable
+          ? "Selected music file is unavailable"
+          : enabled
+            ? "Turn background music off"
+            : "Enable background music",
+      );
+      const text = soundToggle.querySelector(".sound-toggle__label");
+      if (text) {
+        text.textContent = label || (enabled ? "Music On" : "Enable Music");
+      }
+      setModeUi();
+    };
+
+    const clearFade = () => {
+      if (fadeInterval) {
+        window.clearInterval(fadeInterval);
+        fadeInterval = 0;
+      }
+    };
+
+    const fadeTo = (target, onComplete) => {
+      clearFade();
+      fadeInterval = window.setInterval(() => {
+        const next = ambientAudio.volume + (target - ambientAudio.volume) * 0.22;
+        ambientAudio.volume = Math.abs(next - target) < 0.01 ? target : next;
+        if (ambientAudio.volume === target) {
+          clearFade();
+          if (onComplete) onComplete();
+        }
+      }, 50);
+    };
+
+    const safePause = () => {
+      try {
+        ambientAudio.pause();
+      } catch {
+        // Ignore pause failures.
+      }
+    };
+
+    const setAudioSource = (mode) => {
+      const track = AUDIO_TRACKS[mode];
+      if (!track) return;
+      pendingSource = preferFallback ? track.fallback : track.src;
+      sourceAttempt = preferFallback ? 1 : 0;
+      ambientAudio.src = pendingSource;
+      ambientAudio.setAttribute("data-fallback", track.fallback);
+      ambientAudio.load();
+    };
+
+    const notifySceneMode = () => {
+      if (typeof window.setPortfolioAudioMode === "function") {
+        window.setPortfolioAudioMode(currentMode);
+      }
+    };
+
+    const startAudio = async () => {
+      try {
+        setAudioSource(currentMode);
+        await ambientAudio.play();
+        fadeTo(0.22);
+        setSoundUi(true, "Music On");
+        soundEnabled = true;
+        localStorage.setItem(SOUND_STORAGE_KEY, "true");
+        localStorage.setItem(SOUND_MODE_STORAGE_KEY, currentMode);
+        notifySceneMode();
+        return true;
+      } catch {
+        setSoundUi(false, "Music Off");
+        soundEnabled = false;
+        localStorage.setItem(SOUND_STORAGE_KEY, "false");
+        return false;
+      }
+    };
+
+    const stopAudio = () => {
+      fadeTo(0, () => {
+        safePause();
+      });
+      setSoundUi(false, "Music Off");
+      soundEnabled = false;
+      localStorage.setItem(SOUND_STORAGE_KEY, "false");
+    };
+
+    const switchMode = async (nextMode) => {
+      if (!AUDIO_TRACKS[nextMode]) return;
+      currentMode = nextMode;
+      localStorage.setItem(SOUND_MODE_STORAGE_KEY, currentMode);
+      setModeUi();
+      notifySceneMode();
+
+      if (!soundEnabled) {
+        closeSoundMenu();
+        return;
+      }
+
+      clearFade();
+      fadeTo(0, async () => {
+        safePause();
+        try {
+          setAudioSource(currentMode);
+          await ambientAudio.play();
+          fadeTo(0.22);
+          setSoundUi(true, "Music On");
+        } catch {
+          audioUnavailable = true;
+          soundToggle.setAttribute("disabled", "true");
+          soundMenuToggle.setAttribute("disabled", "true");
+          setSoundUi(false, "Audio Missing");
+          soundEnabled = false;
+          localStorage.setItem(SOUND_STORAGE_KEY, "false");
+        }
+      });
+
+      closeSoundMenu();
+    };
+
+    const attemptResumeAfterInteraction = async () => {
+      if (!soundEnabled || interactionArmed) return;
+      interactionArmed = true;
+      await startAudio();
+      window.removeEventListener("pointerdown", attemptResumeAfterInteraction);
+      window.removeEventListener("keydown", attemptResumeAfterInteraction);
+    };
+
+    soundToggle.addEventListener("click", async () => {
+      if (audioUnavailable) return;
+      if (ambientAudio.paused || !soundEnabled) {
+        await startAudio();
+      } else {
+        stopAudio();
+      }
+    });
+
+    soundMenuToggle.addEventListener("click", () => {
+      if (audioUnavailable) return;
+      if (menuOpen) {
+        closeSoundMenu();
+      } else {
+        openSoundMenu();
+      }
+    });
+
+    audioModeButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const nextMode = button.dataset.audioMode;
+        await switchMode(nextMode);
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!menuOpen) return;
+      if (event.target instanceof Node && event.target.closest(".audio-widget")) return;
+      closeSoundMenu();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeSoundMenu();
+      }
+    });
+
+    ambientAudio.addEventListener("error", () => {
+      const fallback = ambientAudio.getAttribute("data-fallback");
+      if (
+        sourceAttempt === 0 &&
+        fallback &&
+        pendingSource &&
+        ambientAudio.currentSrc.includes(".mp3")
+      ) {
+        sourceAttempt = 1;
+        ambientAudio.src = fallback;
+        ambientAudio.load();
+        if (soundEnabled) {
+          ambientAudio.play().then(() => fadeTo(0.22)).catch(() => {});
+        }
+        return;
+      }
+
+      clearFade();
+      audioUnavailable = true;
+      soundToggle.classList.remove("is-on");
+      soundToggle.setAttribute("aria-pressed", "false");
+      soundToggle.setAttribute("disabled", "true");
+      soundMenuToggle.setAttribute("disabled", "true");
+      setSoundUi(false, "Audio Missing");
+      soundEnabled = false;
+      localStorage.setItem(SOUND_STORAGE_KEY, "false");
+    });
+
+    if (soundEnabled) {
+      setSoundUi(false, "Music Off");
+      window.addEventListener("pointerdown", attemptResumeAfterInteraction, { once: true });
+      window.addEventListener("keydown", attemptResumeAfterInteraction, { once: true });
+    } else {
+      setSoundUi(false, "Enable Music");
+    }
+
+    setModeUi();
+    notifySceneMode();
+
+    window.showSoundToggle = () => {
+      const audioWidget = document.getElementById("audioWidget");
+      if (!audioWidget) return;
+      audioWidget.hidden = false;
+      requestAnimationFrame(() => {
+        audioWidget.classList.add("is-visible");
+      });
+    };
+  };
+
+  let preloaderDone = false;
+  let preloaderRaf = 0;
+  let preloaderFinishTimeout = 0;
+
+  finishPreloader = (skipped = false) => {
+    if (!preloader || preloaderDone) return;
+    preloaderDone = true;
+    cancelAnimationFrame(preloaderRaf);
+    clearTimeout(preloaderFinishTimeout);
+    if (typeof window.setPortfolioIntroProgress === "function") {
+      window.setPortfolioIntroProgress(1);
+    }
+    if (typeof window.setPortfolioSceneReady === "function") {
+      window.setPortfolioSceneReady();
+    }
+    body.classList.remove("is-preloading");
+    body.classList.add("is-scene-ready");
+    preloader.classList.add("is-hidden");
+
+    window.setTimeout(() => {
+      preloader.remove();
+      if (skipped) body.classList.remove("menu-open");
+      if (typeof window.showSoundToggle === "function") {
+        window.showSoundToggle();
+      }
+    }, prefersReducedMotion() ? 80 : 760);
+  };
+
+  const initPreloader = () => {
+    if (!preloader || !preloaderCanvas || !preloaderPhase || !preloaderProgress || !preloaderBar || !preloaderCore) {
+      body.classList.remove("is-preloading");
+      return;
+    }
+
+    if (prefersReducedMotion()) {
+      preloaderProgress.textContent = "100%";
+      preloaderBar.style.width = "100%";
+      preloaderPhase.textContent = stageLabels[2];
+      if (typeof window.setPortfolioIntroProgress === "function") {
+        window.setPortfolioIntroProgress(1);
+      }
+      preloaderFinishTimeout = window.setTimeout(() => finishPreloader(false), 280);
+      preloaderSkip?.addEventListener("click", () => finishPreloader(true), { once: true });
+      return;
+    }
+
+    const ctx = preloaderCanvas.getContext("2d");
+    if (!ctx) {
+      finishPreloader(false);
+      return;
+    }
+
+    let width = 0;
+    let height = 0;
+    let stars = [];
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      preloaderCanvas.width = Math.floor(width * dpr);
+      preloaderCanvas.height = Math.floor(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      stars = Array.from({ length: width < 768 ? 72 : 140 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 1.8 + 0.5,
+        alpha: Math.random() * 0.6 + 0.16,
+        phase: Math.random() * Math.PI * 2,
+      }));
+    };
+
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+
+    const duration = width < 768 ? 900 : 1200;
+    const startedAt = performance.now();
+
+    const draw = (now) => {
+      const elapsed = now - startedAt;
+      const progress = clamp(elapsed / duration, 0, 1);
+      const phaseIndex = Math.min(stageLabels.length - 1, Math.floor(progress * stageLabels.length));
+      const centerX = width / 2;
+      const centerY = height * 0.46;
+      const glowRadius = Math.min(width, height) * (0.08 + progress * 0.12);
+
+      preloaderPhase.textContent = stageLabels[phaseIndex];
+      preloaderProgress.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
+      preloaderBar.style.width = `${progress * 100}%`;
+      preloaderCore.style.setProperty("--core-scale", String(0.82 + progress * 0.22));
+      if (typeof window.setPortfolioIntroProgress === "function") {
+        window.setPortfolioIntroProgress(progress);
+      }
+
+      ctx.clearRect(0, 0, width, height);
+
+      const baseGlow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, glowRadius * 3.8);
+      baseGlow.addColorStop(0, `rgba(255,255,255,${0.08 + progress * 0.08})`);
+      baseGlow.addColorStop(0.18, `rgba(136,228,255,${0.12 + progress * 0.12})`);
+      baseGlow.addColorStop(0.42, `rgba(141,121,255,${0.08 + progress * 0.08})`);
+      baseGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = baseGlow;
+      ctx.fillRect(0, 0, width, height);
+
+      stars.forEach((star, index) => {
+        const pulse = 0.72 + Math.sin(now * 0.0012 + star.phase + index * 0.18) * 0.22;
+        ctx.fillStyle = `rgba(232,242,255,${star.alpha * pulse * (0.4 + progress * 0.6)})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      const singularity = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, glowRadius);
+      singularity.addColorStop(0, `rgba(255,255,255,${0.9 - progress * 0.2})`);
+      singularity.addColorStop(0.2, `rgba(136,228,255,${0.42 + progress * 0.12})`);
+      singularity.addColorStop(0.5, `rgba(141,121,255,${0.18 + progress * 0.08})`);
+      singularity.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = singularity;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      preloaderRaf = requestAnimationFrame(draw);
+      if (progress >= 1) finishPreloader(false);
+    };
+
+    preloaderSkip?.addEventListener("click", () => finishPreloader(true), { once: true });
+    preloaderRaf = requestAnimationFrame(draw);
+  };
+
+  initPreloader();
+  initActiveNav();
+  initReveal();
+  initCounters();
+  initCursor();
+  initMagnetic();
+  initPointerGlow();
+  initHeroDeckTilt();
+  initProjectFilters();
+  initSound();
+
+  window.addEventListener("load", () => {
+    if (prefersReducedMotion() || preloaderDone) return;
+    preloaderFinishTimeout = window.setTimeout(() => finishPreloader(false), 450);
+  });
 })();
