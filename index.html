@@ -60,7 +60,12 @@
     <canvas id="bg" aria-hidden="true"></canvas>
 
     <!-- Only use royalty-free, CC0, self-generated, or properly licensed audio here. Do not use copyrighted music. -->
-    <audio id="ambientAudio" loop preload="none" data-prefer-format="wav"></audio>
+    <audio
+      id="ambientAudio"
+      loop
+      preload="none"
+      data-prefer-format="wav"
+    ></audio>
 
     <header class="site-header">
       <nav class="navbar" id="navbar" aria-label="Primary navigation">
@@ -115,7 +120,9 @@
                 </span>
                 <span class="sound-toggle__meta">
                   <span class="sound-toggle__label">Enable Music</span>
-                  <span class="sound-toggle__mode" id="soundModeLabel">Piano</span>
+                  <span class="sound-toggle__mode" id="soundModeLabel"
+                    >Piano</span
+                  >
                 </span>
               </button>
 
@@ -133,43 +140,77 @@
               </button>
             </div>
 
-            <div class="audio-menu nav-audio__panel" id="audioMenu" aria-label="Background music tracks">
-              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="piano" aria-pressed="false">
+            <div
+              class="audio-menu nav-audio__panel"
+              id="audioMenu"
+              aria-label="Background music tracks"
+            >
+              <button
+                type="button"
+                class="audio-mode nav-audio__option"
+                data-audio-mode="piano"
+                aria-pressed="false"
+              >
                 <span
                   class="audio-mode__icon audio-mode__icon--piano"
                   aria-hidden="true"
                 ></span>
                 <span>Piano</span>
               </button>
-              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="violin" aria-pressed="false">
+              <button
+                type="button"
+                class="audio-mode nav-audio__option"
+                data-audio-mode="violin"
+                aria-pressed="false"
+              >
                 <span
                   class="audio-mode__icon audio-mode__icon--violin"
                   aria-hidden="true"
                 ></span>
                 <span>Violin</span>
               </button>
-              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="guitar" aria-pressed="false">
+              <button
+                type="button"
+                class="audio-mode nav-audio__option"
+                data-audio-mode="guitar"
+                aria-pressed="false"
+              >
                 <span
                   class="audio-mode__icon audio-mode__icon--guitar"
                   aria-hidden="true"
                 ></span>
                 <span>Guitar</span>
               </button>
-              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="jazz" aria-pressed="false">
+              <button
+                type="button"
+                class="audio-mode nav-audio__option"
+                data-audio-mode="jazz"
+                aria-pressed="false"
+              >
                 <span
                   class="audio-mode__icon audio-mode__icon--jazz"
                   aria-hidden="true"
                 ></span>
                 <span>Jazz</span>
               </button>
-              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="classical" aria-pressed="false">
+              <button
+                type="button"
+                class="audio-mode nav-audio__option"
+                data-audio-mode="classical"
+                aria-pressed="false"
+              >
                 <span
                   class="audio-mode__icon audio-mode__icon--classical"
                   aria-hidden="true"
                 ></span>
                 <span>Classical</span>
               </button>
-              <button type="button" class="audio-mode nav-audio__option" data-audio-mode="pop" aria-pressed="false">
+              <button
+                type="button"
+                class="audio-mode nav-audio__option"
+                data-audio-mode="pop"
+                aria-pressed="false"
+              >
                 <span
                   class="audio-mode__icon audio-mode__icon--pop"
                   aria-hidden="true"
@@ -224,11 +265,11 @@
 
             <div class="hero-proof" data-reveal>
               <article class="hero-proof__item">
-                <strong class="count-up" data-count="2">0</strong>
+                <strong class="count-up" data-count="3+">0</strong>
                 <span>Years Experience</span>
               </article>
               <article class="hero-proof__item">
-                <strong class="count-up" data-count="10">0</strong>
+                <strong class="count-up" data-count="10+">0</strong>
                 <span>Projects</span>
               </article>
               <article class="hero-proof__item">

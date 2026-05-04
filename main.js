@@ -580,6 +580,8 @@
   let preloaderDone = false;
   let preloaderRaf = 0;
   let preloaderFinishTimeout = 0;
+  let pageLoaded = document.readyState === "complete";
+  let preloaderProgressDone = false;
 
   finishPreloader = (skipped = false) => {
     if (!preloader || preloaderDone) return;
@@ -700,7 +702,15 @@
       ctx.fill();
 
       preloaderRaf = requestAnimationFrame(draw);
-      if (progress >= 1) finishPreloader(false);
+      if (progress >= 1) {
+        preloaderProgressDone = true;
+        preloaderProgress.textContent = "100%";
+        preloaderBar.style.width = "100%";
+        preloaderPhase.textContent = stageLabels[2];
+        if (pageLoaded) {
+          finishPreloader(false);
+        }
+      }
     };
 
     preloaderSkip?.addEventListener("click", () => finishPreloader(true), { once: true });
@@ -719,7 +729,10 @@
   initSound();
 
   window.addEventListener("load", () => {
+    pageLoaded = true;
     if (prefersReducedMotion() || preloaderDone) return;
-    preloaderFinishTimeout = window.setTimeout(() => finishPreloader(false), 450);
+    if (preloaderProgressDone) {
+      finishPreloader(false);
+    }
   });
 })();
